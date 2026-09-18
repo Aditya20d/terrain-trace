@@ -190,9 +190,12 @@ async function getWeatherFeaturesBatch(points) {
         // array while a batch request was running.
         fetchable.forEach((point, index) => {
           const key = pointKey(point.lat, point.lon);
-          const pointPromise = batchPromise.then(
-            (results) => results[index]
-          );
+          const pointPromise = batchPromise
+            .then((results) => results[index])
+            .catch((err) => {
+              // Handled by batchPromise in try/catch; avoid unhandled rejection
+              return null;
+            });
           pendingRequests.set(key, pointPromise);
         });
 
