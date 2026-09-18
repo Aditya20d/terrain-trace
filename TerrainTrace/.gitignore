@@ -1,0 +1,150 @@
+# ==========================================
+# TERRAINTRACE - FULL PROJECT GITIGNORE
+# ==========================================
+
+# ------------------------------------------
+# Environment / Secrets
+# ------------------------------------------
+
+.env
+.env.*
+!.env.example
+
+# ------------------------------------------
+# Node.js
+# ------------------------------------------
+
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Frontend build files
+frontend/dist/
+frontend/build/
+frontend/.vite/
+
+# Backend build files
+backend/dist/
+backend/build/
+
+# ------------------------------------------
+# Python
+# ------------------------------------------
+
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Python tools/cache
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ------------------------------------------
+# TerrainTrace generated/cache data
+# ------------------------------------------
+
+backend/data/dem-cache/
+backend/data/faults/
+
+# DEM / raster files
+*.tif
+*.tiff
+*.geotiff
+*.img
+*.bil
+*.hdr
+
+# Temporary/generated GIS files
+*.tmp
+*.cache
+
+# ------------------------------------------
+# Logs
+# ------------------------------------------
+
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# ------------------------------------------
+# OS files
+# ------------------------------------------
+
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ------------------------------------------
+# Editors / IDEs
+# ------------------------------------------
+
+.vscode/
+.idea/
+
+# Keep shared VS Code extension recommendations
+!.vscode/extensions.json
+
+# ------------------------------------------
+# Local development files
+# ------------------------------------------
+
+*.local
+*.local.json
+
+# ------------------------------------------
+# Test / coverage output
+# ------------------------------------------
+
+coverage/
+.nyc_output/
+
+# ------------------------------------------
+# Temporary files
+# ------------------------------------------
+
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# ------------------------------------------
+# ML / generated model artifacts
+# ------------------------------------------
+
+# Uncomment these if you don't want model binaries in Git
+# *.joblib
+# *.pkl
+# *.pickle
+
+# ------------------------------------------
+# OS / Python packaging
+# ------------------------------------------
+
+*.egg-info/
+.eggs/
+dist/
+build/
+pip-wheel-metadata/
+
+# ------------------------------------------
+# Misc generated files
+# ------------------------------------------
+
+.DS_Store
+*.bak
+*.old
