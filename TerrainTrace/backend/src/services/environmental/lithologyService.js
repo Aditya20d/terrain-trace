@@ -5,60 +5,15 @@ const MACROSTRAT_URL =
 
 const lithologyCache = new Map();
 const pendingRequests = new Map();
-const LITHOLOGY_CONCURRENCY = 6;
 
-function pointKey(lat, lon) {
+const CONCURRENCY = 5;
+
+function cacheKey(lat, lon) {
   return `${Number(lat).toFixed(4)},${Number(lon).toFixed(4)}`;
 }
 
-async function runWithConcurrency(items, concurrency, worker) {
-  if (items.length === 0) return [];
-
-  const results = new Array(items.length);
-  let nextIndex = 0;
-
-  async function workerLoop() {
-    while (true) {
-      const index = nextIndex++;
-      if (index >= items.length) return;
-      results[index] = await worker(items[index], index);
-    }
-  }
-
-  const count = Math.min(concurrency, items.length);
-  await Promise.all(
-    Array.from({ length: count }, () => workerLoop())
-  );
-
-  return results;
-}
-
-async function fetchLithology(lat, lon) {
-  const response = await axios.get(
-    MACROSTRAT_URL,
-    {
-      params: { lat, lng: lon },
-      timeout: 15000,
-    }
-  );
-
-  const data = response.data?.success?.data;
-
-  if (!Array.isArray(data) || data.length === 0) {
-    return { lithology: "unknown" };
-  }
-
-  const lithology = data[0]?.lith || "unknown";
-
-  return {
-    lithology: String(lithology)
-      .trim()
-      .toLowerCase(),
-  };
-}
-
 async function getLithology(lat, lon) {
-  const key = pointKey(lat, lon);
+  const key = cacheKey(lat, lon);
 
   if (lithologyCache.has(key)) {
     return lithologyCache.get(key);
@@ -68,62 +23,144 @@ async function getLithology(lat, lon) {
     return pendingRequests.get(key);
   }
 
-  const requestPromise = fetchLithology(lat, lon)
-    .then((result) => {
-      lithologyCache.set(key, result);
-      return result;
-    })
-    .catch((error) => {
-      console.warn(
-        `Lithology lookup failed for ${lat}, ${lon}: ${
-          error.response?.status || error.message
-        }`
-      );
+  console.log(
+    `Fetching lithology: ${key}`
+  );
 
-      const fallback = { lithology: "unknown" };
-      lithologyCache.set(key, fallback);
-      return fallback;
-    })
-    .finally(() => {
-      pendingRequests.delete(key);
-    });
+  const requestPromise =
+    axios
+      .get(
+        MACROSTRAT_URL,
+        {
+          params: {
+            lat,
+            lng: lon,
+          },
+          timeout: 15000,
+        }
+      )
+      .then((response) => {
+        const data =
+          response.data?.success
+            ?.data;
 
-  pendingRequests.set(key, requestPromise);
+        if (
+          !Array.isArray(data) ||
+          data.length === 0
+        ) {
+          return {
+            lithology: "unknown",
+          };
+        }
+
+        return {
+          lithology: String(
+            data[0]?.lith ||
+              "unknown"
+          )
+            .trim()
+            .toLowerCase(),
+        };
+      })
+      .then((result) => {
+        lithologyCache.set(
+          key,
+          result
+        );
+        return result;
+      })
+      .finally(() => {
+        pendingRequests.delete(
+          key
+        );
+      });
+
+  pendingRequests.set(
+    key,
+    requestPromise
+  );
+
   return requestPromise;
 }
 
-async function getLithologyBatch(points) {
-  const resultMap = new Map();
-
-  if (!Array.isArray(points) || points.length === 0) {
-    return resultMap;
+async function getLithologyBatch(
+  points
+) {
+  if (
+    !Array.isArray(points) ||
+    points.length === 0
+  ) {
+    return new Map();
   }
 
-  const uniquePoints = [];
-  const seen = new Set();
+  const result = new Map();
+  const missing = [];
 
   for (const point of points) {
-    const key = pointKey(point.lat, point.lon);
-    if (!seen.has(key)) {
-      seen.add(key);
-      uniquePoints.push(point);
+    const key = cacheKey(
+      point.lat,
+      point.lon
+    );
+
+    if (lithologyCache.has(key)) {
+      result.set(
+        key,
+        lithologyCache.get(key)
+      );
+    } else if (
+      pendingRequests.has(key)
+    ) {
+      result.set(
+        key,
+        await pendingRequests.get(key)
+      );
+    } else {
+      missing.push(point);
     }
   }
 
-  await runWithConcurrency(
-    uniquePoints,
-    LITHOLOGY_CONCURRENCY,
-    async (point) => {
-      const key = pointKey(point.lat, point.lon);
-      const result = await getLithology(
-        point.lat,
-        point.lon
+  let nextIndex = 0;
+
+  async function worker() {
+    while (true) {
+      const index = nextIndex++;
+
+      if (index >= missing.length) {
+        return;
+      }
+
+      const point =
+        missing[index];
+
+      const data =
+        await getLithology(
+          point.lat,
+          point.lon
+        );
+
+      result.set(
+        cacheKey(
+          point.lat,
+          point.lon
+        ),
+        data
       );
-      resultMap.set(key, result);
     }
+  }
+
+  const workerCount = Math.min(
+    CONCURRENCY,
+    missing.length
   );
 
-  return resultMap;
+  await Promise.all(
+    Array.from(
+      { length: workerCount },
+      () => worker()
+    )
+  );
+
+  return result;
 }
 
 module.exports = {

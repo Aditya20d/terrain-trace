@@ -12,28 +12,12 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { getBatchRiskPredictions } from "../../services/api";
 
-const NER_BOUNDS = {
-  south: 21,
-  north: 34,
-  west: 75,
-  east: 98,
-};
+const BOUNDARY_URL =
+  "/data/northeast_states.geojson";
 
-const BOUNDARY_URL = "/data/northeast_states.geojson";
-
-const DEM_MACRO_TILE_SIZE = 4;
-
-// Keep overview navigation available, but only run expensive analysis
-// when the user is sufficiently zoomed in.
 const MIN_RISK_ZOOM = 7;
-
-// Maximum AI sampling points sent to the backend for one viewport.
 const MAX_POINTS = 64;
-
-// Safety limit: don't make one viewport trigger a huge number of
-// 80–95 MB DEM downloads. Pan/zoom to continue into another area.
-const MAX_DEM_TILES_PER_REQUEST = 2;
-
+const MAX_CACHED_PREDICTIONS = 5000;
 const VIEWPORT_DEBOUNCE_MS = 700;
 
 function getRiskColor(probability) {
@@ -55,52 +39,91 @@ function getRiskLabel(probability) {
 }
 
 function clamp(value, min, max) {
-  return Math.min(Math.max(value, min), max);
+  return Math.min(
+    Math.max(value, min),
+    max
+  );
 }
 
 function clipToNER(bounds) {
-  const south = Math.max(bounds.south, NER_BOUNDS.south);
-  const north = Math.min(bounds.north, NER_BOUNDS.north);
-  const west = Math.max(bounds.west, NER_BOUNDS.west);
-  const east = Math.min(bounds.east, NER_BOUNDS.east);
+  const south = Math.max(
+    bounds.south,
+    21
+  );
+  const north = Math.min(
+    bounds.north,
+    34
+  );
+  const west = Math.max(
+    bounds.west,
+    75
+  );
+  const east = Math.min(
+    bounds.east,
+    98
+  );
 
-  if (south >= north || west >= east) {
+  if (
+    south >= north ||
+    west >= east
+  ) {
     return null;
   }
 
-  return { south, north, west, east };
-}
-
-function getDemTileKey(lat, lon) {
-  const south =
-    Math.floor(lat / DEM_MACRO_TILE_SIZE) *
-    DEM_MACRO_TILE_SIZE;
-
-  const west =
-    Math.floor(lon / DEM_MACRO_TILE_SIZE) *
-    DEM_MACRO_TILE_SIZE;
-
-  return `${south.toFixed(1)}_${west.toFixed(1)}`;
+  return {
+    south,
+    north,
+    west,
+    east,
+  };
 }
 
 function getGridShape(bounds) {
-  const latSpan = Math.max(bounds.north - bounds.south, 0.01);
-  const lonSpan = Math.max(bounds.east - bounds.west, 0.01);
-  const aspect = lonSpan / latSpan;
+  const latSpan =
+    Math.max(
+      bounds.north -
+        bounds.south,
+      0.01
+    );
+
+  const lonSpan =
+    Math.max(
+      bounds.east -
+        bounds.west,
+      0.01
+    );
+
+  const aspect =
+    lonSpan / latSpan;
 
   let cols = Math.round(
-    Math.sqrt(MAX_POINTS * aspect)
+    Math.sqrt(
+      MAX_POINTS *
+        aspect
+    )
   );
 
-  cols = clamp(cols, 4, 10);
+  cols = clamp(
+    cols,
+    4,
+    10
+  );
 
   let rows = Math.ceil(
-    MAX_POINTS / cols
+    MAX_POINTS /
+      cols
   );
 
-  rows = clamp(rows, 4, 10);
+  rows = clamp(
+    rows,
+    4,
+    10
+  );
 
-  while (rows * cols > MAX_POINTS) {
+  while (
+    rows * cols >
+    MAX_POINTS
+  ) {
     if (rows >= cols) {
       rows -= 1;
     } else {
@@ -108,58 +131,91 @@ function getGridShape(bounds) {
     }
   }
 
-  return { rows, cols };
+  return {
+    rows,
+    cols,
+  };
 }
 
-function generateViewportPoints(bounds) {
-  const clipped = clipToNER(bounds);
+function generateViewportPoints(
+  bounds
+) {
+  const clipped =
+    clipToNER(
+      bounds
+    );
 
   if (!clipped) {
     return [];
   }
 
-  const EDGE_EPSILON = 0.0001;
+  const EDGE_EPSILON =
+    0.0001;
 
   const safeBounds = {
-    south: clipped.south + EDGE_EPSILON,
-    north: clipped.north - EDGE_EPSILON,
-    west: clipped.west + EDGE_EPSILON,
-    east: clipped.east - EDGE_EPSILON,
+    south:
+      clipped.south +
+      EDGE_EPSILON,
+    north:
+      clipped.north -
+      EDGE_EPSILON,
+    west:
+      clipped.west +
+      EDGE_EPSILON,
+    east:
+      clipped.east -
+      EDGE_EPSILON,
   };
 
-  if (
-    safeBounds.south >= safeBounds.north ||
-    safeBounds.west >= safeBounds.east
-  ) {
-    return [];
-  }
-
-  const { rows, cols } =
-    getGridShape(safeBounds);
+  const {
+    rows,
+    cols,
+  } =
+    getGridShape(
+      safeBounds
+    );
 
   const points = [];
 
-  for (let row = 0; row < rows; row += 1) {
+  for (
+    let row = 0;
+    row < rows;
+    row += 1
+  ) {
     const lat =
       rows === 1
-        ? (safeBounds.south + safeBounds.north) / 2
+        ? (safeBounds.south +
+            safeBounds.north) /
+          2
         : safeBounds.south +
-          ((safeBounds.north - safeBounds.south) *
+          ((safeBounds.north -
+            safeBounds.south) *
             row) /
             (rows - 1);
 
-    for (let col = 0; col < cols; col += 1) {
+    for (
+      let col = 0;
+      col < cols;
+      col += 1
+    ) {
       const lon =
         cols === 1
-          ? (safeBounds.west + safeBounds.east) / 2
+          ? (safeBounds.west +
+              safeBounds.east) /
+            2
           : safeBounds.west +
-            ((safeBounds.east - safeBounds.west) *
+            ((safeBounds.east -
+              safeBounds.west) *
               col) /
               (cols - 1);
 
       points.push({
-        lat: Number(lat.toFixed(6)),
-        lon: Number(lon.toFixed(6)),
+        lat: Number(
+          lat.toFixed(6)
+        ),
+        lon: Number(
+          lon.toFixed(6)
+        ),
       });
     }
   }
@@ -167,15 +223,16 @@ function generateViewportPoints(bounds) {
   return points;
 }
 
-// --------------------------------------------------
-// GeoJSON point-in-polygon
-// --------------------------------------------------
-
-function pointInRing(lon, lat, ring) {
+function pointInRing(
+  lon,
+  lat,
+  ring
+) {
   let inside = false;
 
   for (
-    let i = 0, j = ring.length - 1;
+    let i = 0,
+      j = ring.length - 1;
     i < ring.length;
     j = i++
   ) {
@@ -185,10 +242,13 @@ function pointInRing(lon, lat, ring) {
     const yj = ring[j][1];
 
     const intersects =
-      yi > lat !== yj > lat &&
+      yi > lat !==
+        yj > lat &&
       lon <
-        ((xj - xi) * (lat - yi)) /
-          (yj - yi || Number.EPSILON) +
+        ((xj - xi) *
+          (lat - yi)) /
+          (yj - yi ||
+            Number.EPSILON) +
           xi;
 
     if (intersects) {
@@ -199,21 +259,40 @@ function pointInRing(lon, lat, ring) {
   return inside;
 }
 
-function pointInPolygonCoordinates(
+function pointInPolygon(
   lon,
   lat,
   rings
 ) {
-  if (!Array.isArray(rings) || rings.length === 0) {
+  if (
+    !Array.isArray(rings) ||
+    rings.length === 0
+  ) {
     return false;
   }
 
-  if (!pointInRing(lon, lat, rings[0])) {
+  if (
+    !pointInRing(
+      lon,
+      lat,
+      rings[0]
+    )
+  ) {
     return false;
   }
 
-  for (let i = 1; i < rings.length; i += 1) {
-    if (pointInRing(lon, lat, rings[i])) {
+  for (
+    let i = 1;
+    i < rings.length;
+    i += 1
+  ) {
+    if (
+      pointInRing(
+        lon,
+        lat,
+        rings[i]
+      )
+    ) {
       return false;
     }
   }
@@ -230,18 +309,24 @@ function pointInGeometry(
     return false;
   }
 
-  if (geometry.type === "Polygon") {
-    return pointInPolygonCoordinates(
+  if (
+    geometry.type ===
+    "Polygon"
+  ) {
+    return pointInPolygon(
       lon,
       lat,
       geometry.coordinates
     );
   }
 
-  if (geometry.type === "MultiPolygon") {
+  if (
+    geometry.type ===
+    "MultiPolygon"
+  ) {
     return geometry.coordinates.some(
       (polygon) =>
-        pointInPolygonCoordinates(
+        pointInPolygon(
           lon,
           lat,
           polygon
@@ -249,155 +334,39 @@ function pointInGeometry(
     );
   }
 
-  if (geometry.type === "GeometryCollection") {
-    return geometry.geometries?.some(
-      (child) =>
-        pointInGeometry(
-          lon,
-          lat,
-          child
-        )
-    );
-  }
-
   return false;
 }
 
-function pointInsideNortheast(
+function pointInsideNE(
   lat,
   lon,
   geojson
 ) {
-  if (!geojson) {
-    return false;
-  }
-
-  if (
-    geojson.type === "FeatureCollection"
-  ) {
-    return geojson.features?.some(
+  return Boolean(
+    geojson?.features?.some(
       (feature) =>
         pointInGeometry(
           lon,
           lat,
-          feature?.geometry
+          feature.geometry
         )
-    );
-  }
-
-  if (geojson.type === "Feature") {
-    return pointInGeometry(
-      lon,
-      lat,
-      geojson.geometry
-    );
-  }
-
-  return pointInGeometry(
-    lon,
-    lat,
-    geojson
-  );
-}
-
-function filterPointsToNortheast(
-  points,
-  boundary
-) {
-  return points.filter((point) =>
-    pointInsideNortheast(
-      point.lat,
-      point.lon,
-      boundary
     )
   );
 }
 
-// Keep only points belonging to the closest DEM tiles to the
-// current viewport center. This prevents one request from starting
-// many 80–95 MB OpenTopography downloads.
-function limitPointsToDemTiles(
+function filterPointsToNE(
   points,
-  mapCenter
+  boundary
 ) {
-  const grouped = new Map();
-
-  for (const point of points) {
-    const key = getDemTileKey(
-      point.lat,
-      point.lon
-    );
-
-    if (!grouped.has(key)) {
-      grouped.set(key, []);
-    }
-
-    grouped.get(key).push(point);
-  }
-
-  if (
-    grouped.size <=
-    MAX_DEM_TILES_PER_REQUEST
-  ) {
-    return {
-      points,
-      tileCount: grouped.size,
-    };
-  }
-
-  const rankedTiles =
-    Array.from(grouped.entries())
-      .map(([key, tilePoints]) => {
-        const averageDistance =
-          tilePoints.reduce(
-            (sum, point) => {
-              const dLat =
-                point.lat -
-                mapCenter.lat;
-
-              const dLon =
-                point.lon -
-                mapCenter.lng;
-
-              return (
-                sum +
-                dLat * dLat +
-                dLon * dLon
-              );
-            },
-            0
-          ) / tilePoints.length;
-
-        return {
-          key,
-          points: tilePoints,
-          averageDistance,
-        };
-      })
-      .sort(
-        (a, b) =>
-          a.averageDistance -
-          b.averageDistance
+  return points.filter(
+    (point) =>
+      pointInsideNE(
+        point.lat,
+        point.lon,
+        boundary
       )
-      .slice(
-        0,
-        MAX_DEM_TILES_PER_REQUEST
-      );
-
-  return {
-    points: rankedTiles.flatMap(
-      (tile) => tile.points
-    ),
-    tileCount: rankedTiles.length,
-    skippedTileCount:
-      grouped.size -
-      rankedTiles.length,
-  };
+  );
 }
-
-// --------------------------------------------------
-// Boundary layer
-// --------------------------------------------------
 
 function NortheastBoundary({
   onLoaded,
@@ -406,7 +375,8 @@ function NortheastBoundary({
   const map = useMap();
   const [boundary, setBoundary] =
     useState(null);
-  const fittedRef = useRef(false);
+  const fittedRef =
+    useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -422,17 +392,13 @@ function NortheastBoundary({
         return response.json();
       })
       .then((data) => {
-        if (cancelled) {
-          return;
-        }
+        if (cancelled) return;
 
         setBoundary(data);
         onLoaded(data);
       })
       .catch((error) => {
-        if (cancelled) {
-          return;
-        }
+        if (cancelled) return;
 
         console.error(
           "Boundary loading error:",
@@ -450,28 +416,37 @@ function NortheastBoundary({
   }, [onLoaded, onError]);
 
   useEffect(() => {
-    if (!boundary || fittedRef.current) {
+    if (
+      !boundary ||
+      fittedRef.current
+    ) {
       return;
     }
 
     try {
       const layer =
-        L.geoJSON(boundary);
+        L.geoJSON(
+          boundary
+        );
 
       const bounds =
         layer.getBounds();
 
       if (bounds.isValid()) {
-        map.fitBounds(bounds, {
-          padding: [20, 20],
-          maxZoom: 7,
-        });
+        map.fitBounds(
+          bounds,
+          {
+            padding: [20, 20],
+            maxZoom: 7,
+          }
+        );
 
-        fittedRef.current = true;
+        fittedRef.current =
+          true;
       }
     } catch (error) {
       console.warn(
-        "Could not fit map to Northeast boundary:",
+        "Could not fit map:",
         error
       );
     }
@@ -501,7 +476,8 @@ function MapViewportWatcher({
   const map = useMap();
   const callbackRef =
     useRef(onViewportChange);
-  const enabledRef = useRef(enabled);
+  const enabledRef =
+    useRef(enabled);
 
   useEffect(() => {
     callbackRef.current =
@@ -509,17 +485,24 @@ function MapViewportWatcher({
   }, [onViewportChange]);
 
   useEffect(() => {
-    enabledRef.current = enabled;
+    enabledRef.current =
+      enabled;
 
     if (enabled) {
-      callbackRef.current(map);
+      callbackRef.current(
+        map
+      );
     }
   }, [enabled, map]);
 
   useMapEvents({
     moveend() {
-      if (enabledRef.current) {
-        callbackRef.current(map);
+      if (
+        enabledRef.current
+      ) {
+        callbackRef.current(
+          map
+        );
       }
     },
   });
@@ -528,29 +511,38 @@ function MapViewportWatcher({
 }
 
 function RiskMap() {
-  const [predictions, setPredictions] =
-    useState([]);
+  const [
+    predictions,
+    setPredictions,
+  ] = useState([]);
 
-  const [loading, setLoading] =
-    useState(false);
+  const [
+    loading,
+    setLoading,
+  ] = useState(false);
 
-  const [error, setError] =
-    useState(null);
+  const [
+    error,
+    setError,
+  ] = useState(null);
 
-  const [boundaryError, setBoundaryError] =
-    useState(null);
+  const [
+    boundaryError,
+    setBoundaryError,
+  ] = useState(null);
 
-  const [boundary, setBoundary] =
-    useState(null);
+  const [
+    boundary,
+    setBoundary,
+  ] = useState(null);
 
-  const [pointCount, setPointCount] =
-    useState(0);
+  const [
+    pointCount,
+    setPointCount,
+  ] = useState(0);
 
   const [zoom, setZoom] =
     useState(7);
-
-  const [skippedTiles, setSkippedTiles] =
-    useState(0);
 
   const predictionCacheRef =
     useRef(new Map());
@@ -567,13 +559,57 @@ function RiskMap() {
   const callbackRef =
     useRef(null);
 
-  async function loadViewport(map) {
+  function mergePredictions(
+    results
+  ) {
+    for (const item of results) {
+      const key =
+        `${item.location.lat.toFixed(6)},${item.location.lon.toFixed(6)}`;
+
+      const cache =
+        predictionCacheRef.current;
+
+      cache.delete(key);
+      cache.set(
+        key,
+        item
+      );
+
+      while (
+        cache.size >
+        MAX_CACHED_PREDICTIONS
+      ) {
+        const oldest =
+          cache.keys()
+            .next()
+            .value;
+
+        cache.delete(
+          oldest
+        );
+      }
+    }
+
+    setPredictions(
+      Array.from(
+        predictionCacheRef.current.values()
+      )
+    );
+  }
+
+  async function loadViewport(
+    map
+  ) {
     const currentZoom =
       map.getZoom();
 
-    setZoom(currentZoom);
+    setZoom(
+      currentZoom
+    );
 
-    clearTimeout(timerRef.current);
+    clearTimeout(
+      timerRef.current
+    );
 
     if (!boundary) {
       return;
@@ -584,11 +620,9 @@ function RiskMap() {
       MIN_RISK_ZOOM
     ) {
       requestIdRef.current += 1;
-
       controllerRef.current?.abort();
 
       setPointCount(0);
-      setSkippedTiles(0);
       setLoading(false);
       setError(null);
 
@@ -600,19 +634,17 @@ function RiskMap() {
 
     const viewportBounds =
       clipToNER({
-        south: viewport.getSouth(),
-        north: viewport.getNorth(),
-        west: viewport.getWest(),
-        east: viewport.getEast(),
+        south:
+          viewport.getSouth(),
+        north:
+          viewport.getNorth(),
+        west:
+          viewport.getWest(),
+        east:
+          viewport.getEast(),
       });
 
     if (!viewportBounds) {
-      setPointCount(0);
-      setLoading(false);
-      setError(
-        "Move the map into the supported Northeast region."
-      );
-
       return;
     }
 
@@ -621,37 +653,20 @@ function RiskMap() {
         viewportBounds
       );
 
-    const nerPoints =
-      filterPointsToNortheast(
+    const points =
+      filterPointsToNE(
         rawPoints,
         boundary
       );
 
-    if (nerPoints.length === 0) {
+    if (
+      points.length === 0
+    ) {
       setPointCount(0);
       setLoading(false);
       setError(
         "No prediction points are inside Northeast India for this view."
       );
-
-      return;
-    }
-
-    const limited =
-      limitPointsToDemTiles(
-        nerPoints,
-        map.getCenter()
-      );
-
-    const points =
-      limited.points;
-
-    setSkippedTiles(
-      limited.skippedTileCount || 0
-    );
-
-    if (points.length === 0) {
-      setLoading(false);
       return;
     }
 
@@ -668,7 +683,9 @@ function RiskMap() {
 
     setLoading(true);
     setError(null);
-    setPointCount(points.length);
+    setPointCount(
+      points.length
+    );
 
     try {
       const results =
@@ -684,25 +701,15 @@ function RiskMap() {
         return;
       }
 
-      for (const item of results) {
-        const key =
-          `${item.location.lat.toFixed(6)},${item.location.lon.toFixed(6)}`;
-
-        predictionCacheRef.current.set(
-          key,
-          item
-        );
-      }
-
-      setPredictions(
-        Array.from(
-          predictionCacheRef.current.values()
-        )
+      mergePredictions(
+        results
       );
     } catch (err) {
       if (
-        err?.name === "CanceledError" ||
-        err?.code === "ERR_CANCELED"
+        err?.name ===
+          "CanceledError" ||
+        err?.code ===
+          "ERR_CANCELED"
       ) {
         return;
       }
@@ -715,12 +722,13 @@ function RiskMap() {
       }
 
       console.error(
-        "Failed to fetch predictions:",
+        "Prediction request failed:",
         err
       );
 
       setError(
-        err?.response?.data?.error ||
+        err?.response?.data
+          ?.error ||
           "Unable to refresh landslide predictions."
       );
     } finally {
@@ -733,13 +741,22 @@ function RiskMap() {
     }
   }
 
-  function scheduleViewportLoad(map) {
-    clearTimeout(timerRef.current);
+  function scheduleViewportLoad(
+    map
+  ) {
+    clearTimeout(
+      timerRef.current
+    );
 
     timerRef.current =
-      setTimeout(() => {
-        loadViewport(map);
-      }, VIEWPORT_DEBOUNCE_MS);
+      setTimeout(
+        () => {
+          loadViewport(
+            map
+          );
+        },
+        VIEWPORT_DEBOUNCE_MS
+      );
   }
 
   callbackRef.current =
@@ -747,16 +764,24 @@ function RiskMap() {
 
   useEffect(() => {
     return () => {
-      clearTimeout(timerRef.current);
+      clearTimeout(
+        timerRef.current
+      );
+
       controllerRef.current?.abort();
-      requestIdRef.current += 1;
+
+      requestIdRef.current +=
+        1;
     };
   }, []);
 
   return (
     <div className="h-screen w-full">
       <MapContainer
-        center={[26.0, 94.0]}
+        center={[
+          26.0,
+          94.0,
+        ]}
         zoom={7}
         minZoom={5}
         maxZoom={14}
@@ -768,94 +793,122 @@ function RiskMap() {
         />
 
         <NortheastBoundary
-          onLoaded={setBoundary}
-          onError={setBoundaryError}
-        />
-
-        <MapViewportWatcher
-          enabled={Boolean(boundary)}
-          onViewportChange={(map) =>
-            callbackRef.current?.(map)
+          onLoaded={
+            setBoundary
+          }
+          onError={
+            setBoundaryError
           }
         />
 
-        {predictions.map((item) => {
-          const probability =
-            item.prediction.probability;
+        <MapViewportWatcher
+          enabled={Boolean(
+            boundary
+          )}
+          onViewportChange={(
+            map
+          ) =>
+            callbackRef.current?.(
+              map
+            )
+          }
+        />
 
-          const color =
-            getRiskColor(
-              probability
-            );
+        {predictions.map(
+          (item) => {
+            const probability =
+              item.prediction
+                .probability;
 
-          const riskLabel =
-            getRiskLabel(
-              probability
-            );
+            const color =
+              getRiskColor(
+                probability
+              );
 
-          return (
-            <CircleMarker
-              key={`${item.location.lat}-${item.location.lon}`}
-              center={[
-                item.location.lat,
-                item.location.lon,
-              ]}
-              radius={7}
-              pathOptions={{
-                color,
-                fillColor: color,
-                fillOpacity: 0.75,
-                weight: 1.5,
-              }}
-            >
-              <Popup>
-                <div className="min-w-[170px]">
-                  <strong>
-                    Landslide Risk
-                  </strong>
+            const riskLabel =
+              getRiskLabel(
+                probability
+              );
 
-                  <div>
-                    Risk Level:{" "}
+            return (
+              <CircleMarker
+                key={`${item.location.lat}-${item.location.lon}`}
+                center={[
+                  item.location.lat,
+                  item.location.lon,
+                ]}
+                radius={7}
+                pathOptions={{
+                  color,
+                  fillColor:
+                    color,
+                  fillOpacity:
+                    0.75,
+                  weight: 1.5,
+                }}
+              >
+                <Popup>
+                  <div className="min-w-[170px]">
                     <strong>
-                      {riskLabel}
+                      Landslide Risk
                     </strong>
-                  </div>
 
-                  <div>
-                    Risk Score:{" "}
-                    {
-                      item.prediction
-                        .risk_score
-                    }
-                  </div>
+                    <div>
+                      Risk Level:{" "}
+                      <strong>
+                        {riskLabel}
+                      </strong>
+                    </div>
 
-                  <div>
-                    Probability:{" "}
-                    {(
-                      probability * 100
-                    ).toFixed(2)}
-                    %
-                  </div>
+                    <div>
+                      Risk Score:{" "}
+                      {
+                        item
+                          .prediction
+                          .risk_score
+                      }
+                    </div>
 
-                  <div>
-                    Latitude:{" "}
-                    {item.location.lat}
-                  </div>
+                    <div>
+                      Probability:{" "}
+                      {(
+                        probability *
+                        100
+                      ).toFixed(
+                        2
+                      )}
+                      %
+                    </div>
 
-                  <div>
-                    Longitude:{" "}
-                    {item.location.lon}
+                    <div>
+                      Latitude:{" "}
+                      {
+                        item
+                          .location
+                          .lat
+                      }
+                    </div>
+
+                    <div>
+                      Longitude:{" "}
+                      {
+                        item
+                          .location
+                          .lon
+                      }
+                    </div>
                   </div>
-                </div>
-              </Popup>
-            </CircleMarker>
-          );
-        })}
+                </Popup>
+              </CircleMarker>
+            );
+          }
+        )}
 
         <div className="absolute left-4 top-4 z-[1000] max-w-sm rounded-lg bg-white/95 px-4 py-2 text-sm shadow">
           {!boundary
             ? "Loading Northeast India boundary..."
-            : zoom < MIN_RISK_ZOOM
+            : zoom <
+              MIN_RISK_ZOOM
               ? "Zoom in to load AI risk analysis"
               : loading
                 ? `Analyzing ${pointCount} Northeast points...`
@@ -863,20 +916,10 @@ function RiskMap() {
         </div>
 
         {loading &&
-          predictions.length > 0 && (
+          predictions.length >
+            0 && (
             <div className="absolute right-4 top-4 z-[1000] rounded-lg bg-white/90 px-3 py-2 text-xs text-gray-600 shadow">
-              Updating current area… Existing
-              points remain visible.
-            </div>
-          )}
-
-        {skippedTiles > 0 &&
-          zoom >= MIN_RISK_ZOOM && (
-            <div className="absolute left-4 top-16 z-[1000] max-w-sm rounded-lg bg-white/95 px-4 py-2 text-xs text-gray-600 shadow">
-              This view spans several DEM tiles.
-              Analyzing the two tiles nearest the
-              map center. Pan or zoom to analyze
-              the remaining area.
+              Updating current area…
             </div>
           )}
 
