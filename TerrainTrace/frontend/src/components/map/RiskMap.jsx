@@ -20,7 +20,7 @@ const MAX_CACHED_PREDICTIONS = 5000;
 const VIEWPORT_DEBOUNCE_MS = 700;
 
 // Must match backend/data/static-features/ne_static_terrain.json
-const STATIC_GRID_STEP = 0.1;
+const STATIC_GRID_STEP = 0.05;
 const STATIC_GRID_ORIGIN_LAT = 21.94004;
 const STATIC_GRID_ORIGIN_LON = 88.012332;
 

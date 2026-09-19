@@ -9,63 +9,54 @@ const {
   getFaultDistanceBatch,
 } = require("../src/services/environmental/faultService");
 
-const GRID_STEP =
-  Number(
-    process.env.STATIC_GRID_STEP ||
-      0.05
-  );
+// Static grid resolution.
+// 0.05° gives roughly 4x the grid density of the previous 0.1° grid.
+const GRID_STEP = Number(
+  process.env.STATIC_GRID_STEP || 0.05
+);
 
-const BOUNDARY_FILE =
-  path.join(
-    __dirname,
-    "../../frontend/public/data/northeast_states.geojson"
-  );
+const BOUNDARY_FILE = path.join(
+  __dirname,
+  "../../frontend/public/data/northeast_states.geojson"
+);
 
-const OUTPUT_DIR =
-  path.join(
-    __dirname,
-    "../data/static-features"
-  );
+const OUTPUT_DIR = path.join(
+  __dirname,
+  "../data/static-features"
+);
 
-const OUTPUT_FILE =
-  path.join(
-    OUTPUT_DIR,
-    "ne_static_terrain.json"
-  );
+const OUTPUT_FILE = path.join(
+  OUTPUT_DIR,
+  "ne_static_terrain.json"
+);
 
-const TEMP_FILE =
-  path.join(
-    OUTPUT_DIR,
-    "ne_static_terrain.partial.json"
-  );
+const TEMP_FILE = path.join(
+  OUTPUT_DIR,
+  "ne_static_terrain.partial.json"
+);
 
+// Process the grid in manageable chunks.
 const CHUNK_SIZE = 500;
 
-function pointInRing(
-  lon,
-  lat,
-  ring
-) {
+function pointInRing(lon, lat, ring) {
   let inside = false;
 
   for (
-    let i = 0,
-      j = ring.length - 1;
+    let i = 0, j = ring.length - 1;
     i < ring.length;
     j = i++
   ) {
     const xi = ring[i][0];
     const yi = ring[i][1];
+
     const xj = ring[j][0];
     const yj = ring[j][1];
 
     const intersects =
       yi > lat !== yj > lat &&
       lon <
-        ((xj - xi) *
-          (lat - yi)) /
-          (yj - yi ||
-            Number.EPSILON) +
+        ((xj - xi) * (lat - yi)) /
+          (yj - yi || Number.EPSILON) +
           xi;
 
     if (intersects) {
@@ -76,20 +67,15 @@ function pointInRing(
   return inside;
 }
 
-function pointInPolygon(
-  lon,
-  lat,
-  rings
-) {
+function pointInPolygon(lon, lat, rings) {
   if (
-    !Array.isArray(
-      rings
-    ) ||
+    !Array.isArray(rings) ||
     rings.length === 0
   ) {
     return false;
   }
 
+  // Point must be inside the outer ring.
   if (
     !pointInRing(
       lon,
@@ -100,6 +86,7 @@ function pointInPolygon(
     return false;
   }
 
+  // Point must not be inside any hole.
   for (
     let i = 1;
     i < rings.length;
@@ -212,14 +199,17 @@ function getBoundaryBBox(
           minLon,
           lon
         );
+
         minLat = Math.min(
           minLat,
           lat
         );
+
         maxLon = Math.max(
           maxLon,
           lon
         );
+
         maxLat = Math.max(
           maxLat,
           lat
@@ -240,6 +230,10 @@ function buildGrid(
   bbox,
   boundary
 ) {
+  /*
+   * The boundary minimum becomes the grid origin.
+   * This keeps row/col indexing deterministic.
+   */
   const originLat =
     bbox.minLat;
 
@@ -324,9 +318,7 @@ function buildGrid(
   };
 }
 
-function featureKey(
-  point
-) {
+function featureKey(point) {
   return `${point.row}:${point.col}`;
 }
 
@@ -350,6 +342,7 @@ function loadPartial() {
     console.warn(
       "Partial file is invalid; starting over."
     );
+
     return null;
   }
 }
@@ -428,7 +421,7 @@ async function main() {
   );
 
   const metadata = {
-    version: "v1",
+    version: "v2",
     source:
       "TerrainTrace static terrain/fault preprocessing",
     step: GRID_STEP,
@@ -446,6 +439,10 @@ async function main() {
   const processed =
     new Map();
 
+  /*
+   * Resume only when the partial file belongs to
+   * the same grid resolution.
+   */
   if (
     existing &&
     existing.step ===
@@ -494,13 +491,21 @@ async function main() {
       console.log(
         `Skipping chunk ${start}..${start + chunk.length - 1} (already complete)`
       );
+
       continue;
     }
 
     console.log(
-      `Processing ${start + 1}-${Math.min(start + CHUNK_SIZE, grid.points.length)} / ${grid.points.length}`
+      `Processing ${start + 1}-${Math.min(
+        start + CHUNK_SIZE,
+        grid.points.length
+      )} / ${grid.points.length}`
     );
 
+    /*
+     * Terrain and fault-distance calculations
+     * run in parallel.
+     */
     const [
       terrain,
       faults,
@@ -508,6 +513,7 @@ async function main() {
       getElevationAndSlopeBatch(
         missing
       ),
+
       getFaultDistanceBatch(
         missing
       ),
@@ -540,6 +546,10 @@ async function main() {
           faultResult.fault_distance_m
         )
       ) {
+        console.warn(
+          `Skipping invalid point: ${point.lat}, ${point.lon}`
+        );
+
         continue;
       }
 
@@ -576,9 +586,10 @@ async function main() {
     ...metadata,
     generatedAt:
       new Date().toISOString(),
-    points: Array.from(
-      processed.values()
-    ),
+    points:
+      Array.from(
+        processed.values()
+      ),
   };
 
   fs.writeFileSync(
@@ -588,9 +599,15 @@ async function main() {
     )
   );
 
-  fs.unlinkSync(
-    TEMP_FILE
-  );
+  if (
+    fs.existsSync(
+      TEMP_FILE
+    )
+  ) {
+    fs.unlinkSync(
+      TEMP_FILE
+    );
+  }
 
   console.log(
     `Static terrain grid written: ${OUTPUT_FILE}`
@@ -612,6 +629,7 @@ main().catch(
         error.message ||
         error
     );
+
     process.exit(1);
   }
 );
