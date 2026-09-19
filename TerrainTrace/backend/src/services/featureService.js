@@ -10,9 +10,11 @@ const {
   getFaultDistanceBatch,
 } = require("./environmental/faultService");
 
+
 const {
-  getLithologyBatch,
-} = require("./environmental/lithologyService");
+  getStaticLithologyBatch,
+} = require("./staticLithologyService");
+
 
 const {
   getStaticTerrainBatch,
@@ -169,20 +171,109 @@ async function getLandslideFeaturesBatch(
       dynamicFault;
   }
 
-  // Live features only:
-  // Open-Meteo is fetched in multi-coordinate batches,
-  // Macrostrat is concurrency-limited.
-  const [
-    weatherMap,
-    lithologyMap,
-  ] = await Promise.all([
+    // Live features:
+  // Open-Meteo is fetched in multi-coordinate batches.
+  //
+  // Lithology is read from the precomputed static grid.
+  const weatherPromise =
     getWeatherFeaturesBatch(
       uniquePoints
-    ),
-    getLithologyBatch(
+    );
+
+  const staticLithology =
+    getStaticLithologyBatch(
       uniquePoints
-    ),
-  ]);
+    );
+
+  const weatherMap =
+    await weatherPromise;
+
+  let lithologyResults =
+    staticLithology.results;
+
+  // Only use Macrostrat as a fallback for points
+  // not represented in the static lithology grid.
+  if (
+    staticLithology.available &&
+    staticLithology.missingIndices.length > 0
+  ) {
+    const {
+      getLithologyBatch,
+    } = require(
+      "./environmental/lithologyService"
+    );
+
+    const missingPoints =
+      staticLithology.missingIndices.map(
+        (index) =>
+          uniquePoints[index]
+      );
+
+    const dynamicLithology =
+      await getLithologyBatch(
+        missingPoints
+      );
+
+    lithologyResults =
+      staticLithology.results.slice();
+
+    staticLithology.missingIndices.forEach(
+      (
+        originalIndex,
+        missingIndex
+      ) => {
+        const point =
+          missingPoints[missingIndex];
+
+        const key = pointKey(
+          point.lat,
+          point.lon
+        );
+
+        lithologyResults[
+          originalIndex
+        ] =
+          dynamicLithology.get(key);
+      }
+    );
+  } else if (!staticLithology.available) {
+    const {
+      getLithologyBatch,
+    } = require(
+      "./environmental/lithologyService"
+    );
+
+    const dynamicLithology =
+      await getLithologyBatch(
+        uniquePoints
+      );
+
+    lithologyResults =
+      uniquePoints.map(
+        (point) =>
+          dynamicLithology.get(
+            pointKey(
+              point.lat,
+              point.lon
+            )
+          )
+      );
+  }
+
+  const lithologyMap =
+    new Map();
+
+  uniquePoints.forEach(
+    (point, index) => {
+      lithologyMap.set(
+        pointKey(
+          point.lat,
+          point.lon
+        ),
+        lithologyResults[index]
+      );
+    }
+  );
 
   const featureMap =
     new Map();
