@@ -3,9 +3,13 @@ const cors = require("cors");
 require("dotenv").config();
 
 const riskRoutes = require("./routes/riskRoutes");
+const weatherRoutes = require("./routes/weatherRoutes");
+const roadRoutes = require("./routes/roadRoutes");
+
 const {
   getStaticTerrainStatus,
 } = require("./services/staticFeatureService");
+
 const {
   getFaultDistance,
 } = require("./services/environmental/faultService");
@@ -40,6 +44,13 @@ app.use(
   "/api/risk",
   riskRoutes
 );
+
+app.use(
+  "/api/weather",
+  weatherRoutes
+);
+
+app.use("/api/roads", roadRoutes);
 
 const PORT =
   Number(process.env.PORT) || 5000;

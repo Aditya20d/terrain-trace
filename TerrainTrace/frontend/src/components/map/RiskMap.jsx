@@ -12,7 +12,8 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { getBatchRiskPredictions } from "../../services/api";
 
-const BOUNDARY_URL = "/data/northeast_states.geojson";
+const BOUNDARY_URL =
+  "/data/northeast_states.geojson";
 
 const MIN_RISK_ZOOM = 7;
 const MAX_POINTS = 64;
@@ -23,6 +24,10 @@ const VIEWPORT_DEBOUNCE_MS = 700;
 const STATIC_GRID_STEP = 0.05;
 const STATIC_GRID_ORIGIN_LAT = 21.94004;
 const STATIC_GRID_ORIGIN_LON = 88.012332;
+
+/* =========================================================
+   RISK HELPERS
+========================================================= */
 
 function getRiskColor(probability) {
   const score = probability * 100;
@@ -42,17 +47,133 @@ function getRiskLabel(probability) {
   return "Very High";
 }
 
+function getRiskDescription(probability) {
+  const score = probability * 100;
+
+  if (score < 25) {
+    return "low landslide risk.";
+  }
+
+  if (score < 50) {
+    return "moderate landslide risk.";
+  }
+
+  if (score < 75) {
+    return "elevated landslide risk.";
+  }
+
+  return "very high landslide risk.";
+}
+
+/* =========================================================
+   FEATURE EXPLANATION HELPERS
+========================================================= */
+
+function formatFactorValue(factor) {
+  if (
+    factor?.value === null ||
+    factor?.value === undefined
+  ) {
+    return "Unavailable";
+  }
+
+  if (
+    typeof factor.value === "number"
+  ) {
+    const unit = factor.unit
+      ? ` ${factor.unit}`
+      : "";
+
+    return `${factor.value.toFixed(2)}${unit}`;
+  }
+
+  return String(factor.value);
+}
+
+function getContributionSymbol(direction) {
+  if (direction === "increases_risk") {
+    return "↑";
+  }
+
+  if (direction === "decreases_risk") {
+    return "↓";
+  }
+
+  return "•";
+}
+
+function getContributionText(direction) {
+  if (direction === "increases_risk") {
+    return "Increases risk";
+  }
+
+  if (direction === "decreases_risk") {
+    return "Reduces risk";
+  }
+
+  return "Neutral";
+}
+
+function getContributionClass(direction) {
+  if (direction === "increases_risk") {
+    return "text-red-600";
+  }
+
+  if (direction === "decreases_risk") {
+    return "text-emerald-600";
+  }
+
+  return "text-gray-500";
+}
+
+function getContributionBarWidth(factor) {
+  const value =
+    Number(
+      factor?.relative_contribution_pct
+    ) || 0;
+
+  return Math.min(
+    Math.max(value, 0),
+    100
+  );
+}
+
+/* =========================================================
+   GENERAL HELPERS
+========================================================= */
+
 function clamp(value, min, max) {
-  return Math.min(Math.max(value, min), max);
+  return Math.min(
+    Math.max(value, min),
+    max
+  );
 }
 
 function clipToNER(bounds) {
-  const south = Math.max(bounds.south, 21);
-  const north = Math.min(bounds.north, 34);
-  const west = Math.max(bounds.west, 75);
-  const east = Math.min(bounds.east, 98);
+  const south = Math.max(
+    bounds.south,
+    21
+  );
 
-  if (south >= north || west >= east) {
+  const north = Math.min(
+    bounds.north,
+    34
+  );
+
+  const west = Math.max(
+    bounds.west,
+    75
+  );
+
+  const east = Math.min(
+    bounds.east,
+    98
+  );
+
+  if (
+    south >= north ||
+    west >= east
+  ) {
     return null;
   }
 
@@ -64,102 +185,142 @@ function clipToNER(bounds) {
   };
 }
 
-/**
- * Select evenly distributed integer grid indices while preserving
- * the fact that every index belongs to the static 0.1° grid.
- */
-function selectGridIndices(start, end, count) {
-  const total = end - start + 1;
+/* =========================================================
+   STATIC GRID GENERATION
+========================================================= */
 
-  if (total <= 0 || count <= 0) {
+/**
+ * Select evenly distributed integer grid indices while
+ * preserving the static-grid coordinates.
+ */
+function selectGridIndices(
+  start,
+  end,
+  count
+) {
+  const total =
+    end - start + 1;
+
+  if (
+    total <= 0 ||
+    count <= 0
+  ) {
     return [];
   }
 
-  if (count >= total) {
+  if (
+    count >= total
+  ) {
     return Array.from(
-      { length: total },
-      (_, index) => start + index
+      {
+        length: total,
+      },
+      (_, index) =>
+        start + index
     );
   }
 
   if (count === 1) {
-    return [Math.round((start + end) / 2)];
+    return [
+      Math.round(
+        (start + end) / 2
+      ),
+    ];
   }
 
-  return Array.from({ length: count }, (_, index) =>
-    Math.round(
-      start +
-        (index * (end - start)) /
-          (count - 1)
-    )
+  return Array.from(
+    {
+      length: count,
+    },
+    (_, index) =>
+      Math.round(
+        start +
+          (index *
+            (end - start)) /
+            (count - 1)
+      )
   );
 }
 
 /**
- * Generate viewport points that exactly align with the
- * precomputed backend static 0.1° grid.
+ * Generate viewport points that exactly align with
+ * the precomputed backend 0.05° grid.
  */
-function generateViewportPoints(bounds) {
-  const clipped = clipToNER(bounds);
+function generateViewportPoints(
+  bounds
+) {
+  const clipped =
+    clipToNER(bounds);
 
   if (!clipped) {
     return [];
   }
 
-  /*
-   * Convert viewport coordinates into static-grid indices.
-   *
-   * Small epsilon prevents floating-point precision from
-   * accidentally excluding a grid point lying exactly
-   * on a viewport edge.
-   */
   const EPSILON = 1e-9;
 
-  const rowStart = Math.ceil(
-    (clipped.south - STATIC_GRID_ORIGIN_LAT) /
-      STATIC_GRID_STEP -
-      EPSILON
-  );
+  const rowStart =
+    Math.ceil(
+      (clipped.south -
+        STATIC_GRID_ORIGIN_LAT) /
+        STATIC_GRID_STEP -
+        EPSILON
+    );
 
-  const rowEnd = Math.floor(
-    (clipped.north - STATIC_GRID_ORIGIN_LAT) /
-      STATIC_GRID_STEP +
-      EPSILON
-  );
+  const rowEnd =
+    Math.floor(
+      (clipped.north -
+        STATIC_GRID_ORIGIN_LAT) /
+        STATIC_GRID_STEP +
+        EPSILON
+    );
 
-  const colStart = Math.ceil(
-    (clipped.west - STATIC_GRID_ORIGIN_LON) /
-      STATIC_GRID_STEP -
-      EPSILON
-  );
+  const colStart =
+    Math.ceil(
+      (clipped.west -
+        STATIC_GRID_ORIGIN_LON) /
+        STATIC_GRID_STEP -
+        EPSILON
+    );
 
-  const colEnd = Math.floor(
-    (clipped.east - STATIC_GRID_ORIGIN_LON) /
-      STATIC_GRID_STEP +
-      EPSILON
-  );
+  const colEnd =
+    Math.floor(
+      (clipped.east -
+        STATIC_GRID_ORIGIN_LON) /
+        STATIC_GRID_STEP +
+        EPSILON
+    );
 
-  const totalRows = rowEnd - rowStart + 1;
-  const totalCols = colEnd - colStart + 1;
+  const totalRows =
+    rowEnd - rowStart + 1;
 
-  if (totalRows <= 0 || totalCols <= 0) {
+  const totalCols =
+    colEnd - colStart + 1;
+
+  if (
+    totalRows <= 0 ||
+    totalCols <= 0
+  ) {
     return [];
   }
 
   /*
-   * At this point every possible coordinate is an exact
-   * static-grid coordinate.
-   *
-   * When the viewport contains <= MAX_POINTS cells,
-   * use all of them.
+   * Use every grid cell when the viewport is small.
    */
-  if (totalRows * totalCols <= MAX_POINTS) {
+  if (
+    totalRows * totalCols <=
+    MAX_POINTS
+  ) {
     const points = [];
 
-    for (let row = rowStart; row <= rowEnd; row += 1) {
+    for (
+      let row = rowStart;
+      row <= rowEnd;
+      row += 1
+    ) {
       const lat =
         STATIC_GRID_ORIGIN_LAT +
-        row * STATIC_GRID_STEP;
+        row *
+          STATIC_GRID_STEP;
 
       for (
         let col = colStart;
@@ -168,11 +329,16 @@ function generateViewportPoints(bounds) {
       ) {
         const lon =
           STATIC_GRID_ORIGIN_LON +
-          col * STATIC_GRID_STEP;
+          col *
+            STATIC_GRID_STEP;
 
         points.push({
-          lat: Number(lat.toFixed(5)),
-          lon: Number(lon.toFixed(5)),
+          lat: Number(
+            lat.toFixed(5)
+          ),
+          lon: Number(
+            lon.toFixed(5)
+          ),
         });
       }
     }
@@ -182,27 +348,38 @@ function generateViewportPoints(bounds) {
 
   /*
    * Larger viewport:
-   * choose at most MAX_POINTS while keeping approximately
-   * the same aspect ratio as the viewport.
+   * sample up to MAX_POINTS while preserving
+   * approximate viewport aspect ratio.
    */
-  const aspect = totalCols / totalRows;
+  const aspect =
+    totalCols / totalRows;
 
   let cols = Math.round(
-    Math.sqrt(MAX_POINTS * aspect)
+    Math.sqrt(
+      MAX_POINTS * aspect
+    )
   );
 
-  cols = clamp(cols, 1, totalCols);
+  cols = clamp(
+    cols,
+    1,
+    totalCols
+  );
 
   let rows = Math.round(
     MAX_POINTS / cols
   );
 
-  rows = clamp(rows, 1, totalRows);
+  rows = clamp(
+    rows,
+    1,
+    totalRows
+  );
 
-  /*
-   * Make sure rows * cols never exceeds MAX_POINTS.
-   */
-  while (rows * cols > MAX_POINTS) {
+  while (
+    rows * cols >
+    MAX_POINTS
+  ) {
     if (
       rows >= cols &&
       rows > 1
@@ -215,9 +392,6 @@ function generateViewportPoints(bounds) {
     }
   }
 
-  /*
-   * Try to use additional capacity when possible.
-   */
   let changed = true;
 
   while (changed) {
@@ -225,7 +399,8 @@ function generateViewportPoints(bounds) {
 
     if (
       rows < totalRows &&
-      (rows + 1) * cols <= MAX_POINTS
+      (rows + 1) * cols <=
+        MAX_POINTS
     ) {
       rows += 1;
       changed = true;
@@ -233,40 +408,53 @@ function generateViewportPoints(bounds) {
 
     if (
       cols < totalCols &&
-      rows * (cols + 1) <= MAX_POINTS
+      rows * (cols + 1) <=
+        MAX_POINTS
     ) {
       cols += 1;
       changed = true;
     }
   }
 
-  const selectedRows = selectGridIndices(
-    rowStart,
-    rowEnd,
-    rows
-  );
+  const selectedRows =
+    selectGridIndices(
+      rowStart,
+      rowEnd,
+      rows
+    );
 
-  const selectedCols = selectGridIndices(
-    colStart,
-    colEnd,
-    cols
-  );
+  const selectedCols =
+    selectGridIndices(
+      colStart,
+      colEnd,
+      cols
+    );
 
   const points = [];
 
-  for (const row of selectedRows) {
+  for (
+    const row of selectedRows
+  ) {
     const lat =
       STATIC_GRID_ORIGIN_LAT +
-      row * STATIC_GRID_STEP;
+      row *
+        STATIC_GRID_STEP;
 
-    for (const col of selectedCols) {
+    for (
+      const col of selectedCols
+    ) {
       const lon =
         STATIC_GRID_ORIGIN_LON +
-        col * STATIC_GRID_STEP;
+        col *
+          STATIC_GRID_STEP;
 
       points.push({
-        lat: Number(lat.toFixed(5)),
-        lon: Number(lon.toFixed(5)),
+        lat: Number(
+          lat.toFixed(5)
+        ),
+        lon: Number(
+          lon.toFixed(5)
+        ),
       });
     }
   }
@@ -274,24 +462,36 @@ function generateViewportPoints(bounds) {
   return points;
 }
 
-function pointInRing(lon, lat, ring) {
+/* =========================================================
+   GEOJSON / NORTHEAST INDIA FILTERING
+========================================================= */
+
+function pointInRing(
+  lon,
+  lat,
+  ring
+) {
   let inside = false;
 
   for (
-    let i = 0, j = ring.length - 1;
+    let i = 0,
+      j = ring.length - 1;
     i < ring.length;
     j = i++
   ) {
     const xi = ring[i][0];
     const yi = ring[i][1];
+
     const xj = ring[j][0];
     const yj = ring[j][1];
 
     const intersects =
       yi > lat !== yj > lat &&
       lon <
-        ((xj - xi) * (lat - yi)) /
-          (yj - yi || Number.EPSILON) +
+        ((xj - xi) *
+          (lat - yi)) /
+          (yj - yi ||
+            Number.EPSILON) +
           xi;
 
     if (intersects) {
@@ -302,7 +502,11 @@ function pointInRing(lon, lat, ring) {
   return inside;
 }
 
-function pointInPolygon(lon, lat, rings) {
+function pointInPolygon(
+  lon,
+  lat,
+  rings
+) {
   if (
     !Array.isArray(rings) ||
     rings.length === 0
@@ -320,7 +524,11 @@ function pointInPolygon(lon, lat, rings) {
     return false;
   }
 
-  for (let i = 1; i < rings.length; i += 1) {
+  for (
+    let i = 1;
+    i < rings.length;
+    i += 1
+  ) {
     if (
       pointInRing(
         lon,
@@ -335,12 +543,19 @@ function pointInPolygon(lon, lat, rings) {
   return true;
 }
 
-function pointInGeometry(lon, lat, geometry) {
+function pointInGeometry(
+  lon,
+  lat,
+  geometry
+) {
   if (!geometry) {
     return false;
   }
 
-  if (geometry.type === "Polygon") {
+  if (
+    geometry.type ===
+    "Polygon"
+  ) {
     return pointInPolygon(
       lon,
       lat,
@@ -348,7 +563,10 @@ function pointInGeometry(lon, lat, geometry) {
     );
   }
 
-  if (geometry.type === "MultiPolygon") {
+  if (
+    geometry.type ===
+    "MultiPolygon"
+  ) {
     return geometry.coordinates.some(
       (polygon) =>
         pointInPolygon(
@@ -362,7 +580,11 @@ function pointInGeometry(lon, lat, geometry) {
   return false;
 }
 
-function pointInsideNE(lat, lon, geojson) {
+function pointInsideNE(
+  lat,
+  lon,
+  geojson
+) {
   return Boolean(
     geojson?.features?.some(
       (feature) =>
@@ -375,15 +597,23 @@ function pointInsideNE(lat, lon, geojson) {
   );
 }
 
-function filterPointsToNE(points, boundary) {
-  return points.filter((point) =>
-    pointInsideNE(
-      point.lat,
-      point.lon,
-      boundary
-    )
+function filterPointsToNE(
+  points,
+  boundary
+) {
+  return points.filter(
+    (point) =>
+      pointInsideNE(
+        point.lat,
+        point.lon,
+        boundary
+      )
   );
 }
+
+/* =========================================================
+   NORTHEAST BOUNDARY COMPONENT
+========================================================= */
 
 function NortheastBoundary({
   onLoaded,
@@ -391,8 +621,10 @@ function NortheastBoundary({
 }) {
   const map = useMap();
 
-  const [boundary, setBoundary] =
-    useState(null);
+  const [
+    boundary,
+    setBoundary,
+  ] = useState(null);
 
   const fittedRef =
     useRef(false);
@@ -400,24 +632,32 @@ function NortheastBoundary({
   useEffect(() => {
     let cancelled = false;
 
-    fetch(BOUNDARY_URL)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(
-            `Failed to load Northeast boundary (${response.status})`
-          );
-        }
+    fetch(
+      BOUNDARY_URL
+    )
+      .then(
+        (response) => {
+          if (!response.ok) {
+            throw new Error(
+              `Failed to load Northeast boundary (${response.status})`
+            );
+          }
 
-        return response.json();
-      })
+          return response.json();
+        }
+      )
       .then((data) => {
-        if (cancelled) return;
+        if (cancelled) {
+          return;
+        }
 
         setBoundary(data);
         onLoaded(data);
       })
       .catch((error) => {
-        if (cancelled) return;
+        if (cancelled) {
+          return;
+        }
 
         console.error(
           "Boundary loading error:",
@@ -432,7 +672,10 @@ function NortheastBoundary({
     return () => {
       cancelled = true;
     };
-  }, [onLoaded, onError]);
+  }, [
+    onLoaded,
+    onError,
+  ]);
 
   useEffect(() => {
     if (
@@ -444,21 +687,29 @@ function NortheastBoundary({
 
     try {
       const layer =
-        L.geoJSON(boundary);
+        L.geoJSON(
+          boundary
+        );
 
       const bounds =
         layer.getBounds();
 
-      if (bounds.isValid()) {
+      if (
+        bounds.isValid()
+      ) {
         map.fitBounds(
           bounds,
           {
-            padding: [20, 20],
+            padding: [
+              20,
+              20,
+            ],
             maxZoom: 7,
           }
         );
 
-        fittedRef.current = true;
+        fittedRef.current =
+          true;
       }
     } catch (error) {
       console.warn(
@@ -466,7 +717,10 @@ function NortheastBoundary({
         error
       );
     }
-  }, [boundary, map]);
+  }, [
+    boundary,
+    map,
+  ]);
 
   if (!boundary) {
     return null;
@@ -476,14 +730,20 @@ function NortheastBoundary({
     <GeoJSON
       data={boundary}
       style={{
-        color: "#2563eb",
+        color:
+          "#2563eb",
         weight: 2,
-        fillColor: "#93c5fd",
+        fillColor:
+          "#93c5fd",
         fillOpacity: 0.08,
       }}
     />
   );
 }
+
+/* =========================================================
+   MAP VIEWPORT WATCHER
+========================================================= */
 
 function MapViewportWatcher({
   onViewportChange,
@@ -492,7 +752,9 @@ function MapViewportWatcher({
   const map = useMap();
 
   const callbackRef =
-    useRef(onViewportChange);
+    useRef(
+      onViewportChange
+    );
 
   const enabledRef =
     useRef(enabled);
@@ -500,27 +762,42 @@ function MapViewportWatcher({
   useEffect(() => {
     callbackRef.current =
       onViewportChange;
-  }, [onViewportChange]);
+  }, [
+    onViewportChange,
+  ]);
 
   useEffect(() => {
     enabledRef.current =
       enabled;
 
     if (enabled) {
-      callbackRef.current(map);
+      callbackRef.current(
+        map
+      );
     }
-  }, [enabled, map]);
+  }, [
+    enabled,
+    map,
+  ]);
 
   useMapEvents({
     moveend() {
-      if (enabledRef.current) {
-        callbackRef.current(map);
+      if (
+        enabledRef.current
+      ) {
+        callbackRef.current(
+          map
+        );
       }
     },
   });
 
   return null;
 }
+
+/* =========================================================
+   RISK MAP
+========================================================= */
 
 function RiskMap() {
   const [
@@ -553,11 +830,15 @@ function RiskMap() {
     setPointCount,
   ] = useState(0);
 
-  const [zoom, setZoom] =
-    useState(7);
+  const [
+    zoom,
+    setZoom,
+  ] = useState(7);
 
   const predictionCacheRef =
-    useRef(new Map());
+    useRef(
+      new Map()
+    );
 
   const requestIdRef =
     useRef(0);
@@ -571,8 +852,23 @@ function RiskMap() {
   const callbackRef =
     useRef(null);
 
-  function mergePredictions(results) {
-    for (const item of results) {
+  /* =======================================================
+     CACHE
+  ======================================================= */
+
+  function mergePredictions(
+    results
+  ) {
+    for (
+      const item of results
+    ) {
+      if (
+        !item?.location ||
+        !item?.prediction
+      ) {
+        continue;
+      }
+
       const key =
         `${item.location.lat.toFixed(6)},${item.location.lon.toFixed(6)}`;
 
@@ -608,11 +904,19 @@ function RiskMap() {
     );
   }
 
-  async function loadViewport(map) {
+  /* =======================================================
+     LOAD CURRENT VIEWPORT
+  ======================================================= */
+
+  async function loadViewport(
+    map
+  ) {
     const currentZoom =
       map.getZoom();
 
-    setZoom(currentZoom);
+    setZoom(
+      currentZoom
+    );
 
     clearTimeout(
       timerRef.current
@@ -626,7 +930,8 @@ function RiskMap() {
       currentZoom <
       MIN_RISK_ZOOM
     ) {
-      requestIdRef.current += 1;
+      requestIdRef.current +=
+        1;
 
       controllerRef.current?.abort();
 
@@ -656,26 +961,20 @@ function RiskMap() {
       return;
     }
 
-    /*
-     * Generate points directly from the static
-     * 0.1° backend grid.
-     */
     const rawPoints =
       generateViewportPoints(
         viewportBounds
       );
 
-    /*
-     * Keep only points that fall inside the
-     * actual Northeast state boundaries.
-     */
     const points =
       filterPointsToNE(
         rawPoints,
         boundary
       );
 
-    if (points.length === 0) {
+    if (
+      points.length === 0
+    ) {
       setPointCount(0);
       setLoading(false);
 
@@ -758,7 +1057,9 @@ function RiskMap() {
     }
   }
 
-  function scheduleViewportLoad(map) {
+  function scheduleViewportLoad(
+    map
+  ) {
     clearTimeout(
       timerRef.current
     );
@@ -766,7 +1067,9 @@ function RiskMap() {
     timerRef.current =
       setTimeout(
         () => {
-          loadViewport(map);
+          loadViewport(
+            map
+          );
         },
         VIEWPORT_DEBOUNCE_MS
       );
@@ -783,12 +1086,17 @@ function RiskMap() {
 
       controllerRef.current?.abort();
 
-      requestIdRef.current += 1;
+      requestIdRef.current +=
+        1;
     };
   }, []);
 
+  /* =======================================================
+     RENDER
+  ======================================================= */
+
   return (
-    <div className="h-screen w-full">
+    <div className="h-full min-h-[calc(100vh-64px)] w-full">
       <MapContainer
         center={[
           26.0,
@@ -797,7 +1105,7 @@ function RiskMap() {
         zoom={7}
         minZoom={5}
         maxZoom={14}
-        className="h-full w-full"
+        className="h-full min-h-[calc(100vh-64px)] w-full"
       >
         <TileLayer
           attribution="&copy; OpenStreetMap contributors"
@@ -826,11 +1134,17 @@ function RiskMap() {
           }
         />
 
+        {/* =================================================
+            RISK POINTS
+        ================================================== */}
+
         {predictions.map(
           (item) => {
             const probability =
-              item.prediction
-                .probability;
+              Number(
+                item?.prediction
+                  ?.probability
+              ) || 0;
 
             const color =
               getRiskColor(
@@ -840,6 +1154,29 @@ function RiskMap() {
             const riskLabel =
               getRiskLabel(
                 probability
+              );
+
+            const riskScore =
+              item?.prediction
+                ?.risk_score ??
+              Math.round(
+                probability *
+                  100
+              );
+
+            const factors =
+              Array.isArray(
+                item?.prediction
+                  ?.factors
+              )
+                ? item.prediction
+                    .factors
+                : [];
+
+            const strongestFactors =
+              factors.slice(
+                0,
+                5
               );
 
             return (
@@ -855,59 +1192,185 @@ function RiskMap() {
                   fillColor:
                     color,
                   fillOpacity:
-                    0.75,
+                    0.8,
                   weight: 1.5,
                 }}
               >
                 <Popup>
-                  <div className="min-w-[170px]">
-                    <strong>
-                      Landslide Risk
-                    </strong>
+                  <div className="w-[235px] max-w-[235px] text-sm">
+                    {/* HEADER */}
+                    <div className="border-b border-gray-200 pb-3">
+                      <div className="text-base font-bold text-gray-900">
+                        Landslide Risk
+                      </div>
 
-                    <div>
-                      Risk Level:{" "}
-                      <strong>
+                      <div
+                        className={`mt-1 text-lg font-bold ${
+                          riskLabel ===
+                          "Very High"
+                            ? "text-red-600"
+                            : riskLabel ===
+                                "High"
+                              ? "text-orange-600"
+                              : riskLabel ===
+                                  "Moderate"
+                                ? "text-yellow-600"
+                                : "text-emerald-600"
+                        }`}
+                      >
                         {riskLabel}
-                      </strong>
+                      </div>
+
+                      <div className="mt-1 flex items-center gap-3 text-xs text-gray-600">
+                        <span>
+                          Score:{" "}
+                          <strong>
+                            {riskScore}
+                          </strong>
+                        </span>
+
+                        <span>
+                          Probability:{" "}
+                          <strong>
+                            {(
+                              probability *
+                              100
+                            ).toFixed(
+                              2
+                            )}
+                            %
+                          </strong>
+                        </span>
+                      </div>
                     </div>
 
-                    <div>
-                      Risk Score:{" "}
-                      {
-                        item
-                          .prediction
-                          .risk_score
-                      }
-                    </div>
+                    {/* WHY HIGH RISK */}
+                    <div className="pt-3">
+                      <div className="font-semibold text-gray-900">
+                        Why is this area at risk?
+                      </div>
 
-                    <div>
-                      Probability:{" "}
-                      {(
-                        probability *
-                        100
-                      ).toFixed(
-                        2
+                     
+                      {strongestFactors.length >
+                      0 ? (
+                        <div className="mt-3 space-y-3">
+                          {strongestFactors.map(
+                            (
+                              factor
+                            ) => {
+                              const direction =
+                                factor?.direction ||
+                                "neutral";
+
+                              const barWidth =
+                                getContributionBarWidth(
+                                  factor
+                                );
+
+                              return (
+                                <div
+                                  key={
+                                    factor.key
+                                  }
+                                >
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="min-w-0">
+                                      <div className="flex items-center gap-1.5">
+                                        <span
+                                          className={`font-bold ${getContributionClass(
+                                            direction
+                                          )}`}
+                                        >
+                                          {getContributionSymbol(
+                                            direction
+                                          )}
+                                        </span>
+
+                                        <span className="font-medium text-gray-800">
+                                          {
+                                            factor.name
+                                          }
+                                        </span>
+                                      </div>
+
+                                      <div className="ml-5 text-xs text-gray-500">
+                                        {formatFactorValue(
+                                          factor
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    <div
+                                      className={`shrink-0 text-right text-xs font-semibold ${getContributionClass(
+                                        direction
+                                      )}`}
+                                    >
+                                      {barWidth.toFixed(
+                                        1
+                                      )}
+                                      %
+                                    </div>
+                                  </div>
+
+                                  <div className="ml-5 mt-1 h-1.5 overflow-hidden rounded-full bg-gray-200">
+                                    <div
+                                      className="h-full rounded-full bg-gray-500"
+                                      style={{
+                                        width: `${barWidth}%`,
+                                      }}
+                                    />
+                                  </div>
+
+                                  <div className="ml-5 mt-0.5 text-[10px] text-gray-400">
+                                    {getContributionText(
+                                      direction
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            }
+                          )}
+                        </div>
+                      ) : (
+                        <div className="mt-3 rounded-lg bg-gray-50 p-3 text-xs text-gray-500">
+                          Feature contribution data is
+                          not available for this prediction.
+                        </div>
                       )}
-                      %
                     </div>
 
-                    <div>
-                      Latitude:{" "}
-                      {
-                        item
-                          .location
-                          .lat
-                      }
+                    {/* SUMMARY */}
+                    <div className="mt-4 rounded-lg bg-gray-50 p-3">
+                      <div className="text-xs leading-5 text-gray-600">
+                        {getRiskDescription(
+                          probability
+                        )}
+                      </div>
                     </div>
 
-                    <div>
-                      Longitude:{" "}
-                      {
-                        item
-                          .location
-                          .lon
-                      }
+                    {/* LOCATION */}
+                    <div className="mt-3 border-t border-gray-200 pt-3 text-xs text-gray-500">
+                      <div>
+                        Latitude:{" "}
+                        <span className="font-medium text-gray-700">
+                          {
+                            item
+                              .location
+                              .lat
+                          }
+                        </span>
+                      </div>
+
+                      <div className="mt-1">
+                        Longitude:{" "}
+                        <span className="font-medium text-gray-700">
+                          {
+                            item
+                              .location
+                              .lon
+                          }
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </Popup>
@@ -916,11 +1379,15 @@ function RiskMap() {
           }
         )}
 
+        {/* =================================================
+            MAP STATUS
+        ================================================== */}
+
         <div className="absolute left-4 top-4 z-[1000] max-w-sm rounded-lg bg-white/95 px-4 py-2 text-sm shadow">
           {!boundary
             ? "Loading Northeast India boundary..."
             : zoom <
-              MIN_RISK_ZOOM
+                MIN_RISK_ZOOM
               ? "Zoom in to load AI risk analysis"
               : loading
                 ? `Analyzing ${pointCount} Northeast points...`
@@ -935,6 +1402,46 @@ function RiskMap() {
             </div>
           )}
 
+        {/* =================================================
+            RISK LEGEND
+        ================================================== */}
+
+        <div className="absolute bottom-5 left-4 z-[1000] rounded-xl bg-white/95 p-4 shadow">
+          <div className="mb-2 text-sm font-semibold text-gray-900">
+            Risk Severity
+          </div>
+
+          <div className="space-y-1.5 text-xs">
+            <LegendItem
+              color="green"
+              label="Low"
+              range="0–25"
+            />
+
+            <LegendItem
+              color="yellow"
+              label="Moderate"
+              range="25–50"
+            />
+
+            <LegendItem
+              color="orange"
+              label="High"
+              range="50–75"
+            />
+
+            <LegendItem
+              color="red"
+              label="Very High"
+              range="75–100"
+            />
+          </div>
+        </div>
+
+        {/* =================================================
+            ERRORS
+        ================================================== */}
+
         {boundaryError && (
           <div className="absolute left-4 top-16 z-[1000] max-w-sm rounded-lg bg-white/95 px-4 py-2 text-sm text-red-600 shadow">
             {boundaryError}
@@ -948,6 +1455,36 @@ function RiskMap() {
             </div>
           )}
       </MapContainer>
+    </div>
+  );
+}
+
+/* =========================================================
+   LEGEND ITEM
+========================================================= */
+
+function LegendItem({
+  color,
+  label,
+  range,
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <span
+        className="h-3 w-3 rounded-full border border-gray-300"
+        style={{
+          backgroundColor:
+            color,
+        }}
+      />
+
+      <span className="w-16 text-gray-700">
+        {label}
+      </span>
+
+      <span className="text-gray-400">
+        {range}
+      </span>
     </div>
   );
 }
