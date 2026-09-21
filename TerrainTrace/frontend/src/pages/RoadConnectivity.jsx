@@ -99,9 +99,6 @@ function RoadConnectivity() {
         const response =
           await fetch(url);
 
-        const data =
-          await response.json();
-
         if (
           requestId !==
           requestIdRef.current
@@ -110,11 +107,27 @@ function RoadConnectivity() {
         }
 
         if (!response.ok) {
+          let errorMessage =
+            "Failed to load AI road risk.";
+
+          try {
+            const errorData =
+              await response.json();
+
+            errorMessage =
+              errorData.error ||
+              errorMessage;
+          } catch {
+            /* empty body */
+          }
+
           throw new Error(
-            data.error ||
-              "Failed to load AI road risk."
+            errorMessage
           );
         }
+
+        const data =
+          await response.json();
 
         setRoads(
           Array.isArray(data.roads)
@@ -542,6 +555,14 @@ function RoadConnectivity() {
                 </div>
               </div>
             )}
+
+          {!loading && error && (
+            <div className="pointer-events-none absolute inset-x-0 top-5 z-[500] flex justify-center">
+              <div className="rounded-lg border border-red-800/60 bg-red-950/90 px-4 py-2 text-sm text-red-300 shadow-lg">
+                {error}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -616,6 +637,38 @@ function RoadConnectivity() {
                 ?.tertiary || 0
             }
           />
+        </div>
+      </div>
+
+      {/* How Road Risk is Calculated */}
+      <div className="mt-6 rounded-xl border border-slate-800 bg-slate-900 p-5">
+        <h2 className="text-lg font-semibold text-white">
+          How Road Risk is Calculated
+        </h2>
+
+        <div className="mt-4 space-y-3 text-sm leading-relaxed text-slate-400">
+          <p>
+            Each road in the current viewport is scored using the
+            TerrainTrace CatBoost AI model. A representative midpoint
+            is selected on each road segment, and environmental
+            features (terrain, geology, weather, proximity to faults)
+            are extracted for that location.
+          </p>
+
+          <p>
+            The model produces a landslide probability which is
+            converted to a 0–100 risk score. Roads are then
+            color-coded by risk band: Low (0–24), Moderate (25–49),
+            High (50–74), and Very High (75–100).
+          </p>
+
+          <p>
+            Because each road is screened at a single representative
+            point, the result reflects the AI-predicted landslide risk
+            near that road — not a confirmed landslide or official
+            road-closure status. Actual conditions may vary along the
+            full length of the road.
+          </p>
         </div>
       </div>
 
