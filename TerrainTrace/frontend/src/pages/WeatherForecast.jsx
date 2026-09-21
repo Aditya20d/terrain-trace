@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLanguage } from "../i18n/LanguageContext";
 
 const API_BASE =
   import.meta.env.VITE_API_BASE_URL ||
@@ -7,6 +8,7 @@ const API_BASE =
 const DEFAULT_LOCATION = { lat: 26, lon: 94 };
 
 function WeatherForecast() {
+  const { t } = useLanguage();
   const [latitude, setLatitude] = useState(DEFAULT_LOCATION.lat);
   const [longitude, setLongitude] = useState(DEFAULT_LOCATION.lon);
   const [weather, setWeather] = useState(null);
@@ -32,7 +34,7 @@ function WeatherForecast() {
         lon > 98
       ) {
         throw new Error(
-          "Please enter a valid Northeast India latitude/longitude."
+          t("weather.invalidLocation")
         );
       }
 
@@ -57,15 +59,16 @@ function WeatherForecast() {
       const riskForecastData = await riskForecastResponse.json();
 
       if (!weatherResponse.ok) {
-        throw new Error(weatherData.error || "Failed to load weather data.");
+        throw new Error(weatherData.error || t("weather.failedWeather"));
       }
+
       if (!riskResponse.ok) {
-        throw new Error(riskData.error || "Failed to load current AI risk.");
+        throw new Error(riskData.error || t("weather.failedRisk"));
       }
       if (!riskForecastResponse.ok) {
         throw new Error(
           riskForecastData.error ||
-            "Failed to load 7-day AI risk forecast."
+            t("weather.failedForecast")
         );
       }
 
@@ -74,7 +77,7 @@ function WeatherForecast() {
       setRiskForecast(riskForecastData);
     } catch (err) {
       console.error("Weather page error:", err);
-      setError(err.message || "Unable to load weather intelligence.");
+      setError(err.message || t("weather.unableToLoad"));
     } finally {
       setLoading(false);
     }
@@ -90,21 +93,20 @@ function WeatherForecast() {
     <div className="mx-auto max-w-7xl px-4 py-8">
       <div className="mb-8">
         <p className="text-sm font-medium uppercase tracking-wider text-cyan-400">
-          Weather Intelligence
+          {t("weather.sectionLabel")}
         </p>
         <h1 className="mt-2 text-3xl font-bold text-white">
-          Weather-Linked Risk Forecast
+          {t("weather.title")}
         </h1>
         <p className="mt-3 max-w-3xl text-slate-400">
-          Monitor current weather, rainfall, soil moisture and AI-based
-          landslide risk for the selected location.
+          {t("weather.description")}
         </p>
       </div>
 
       <div className="mb-6 rounded-xl border border-slate-800 bg-slate-900 p-5">
         <div className="flex flex-col gap-4 md:flex-row md:items-end">
           <div className="flex-1">
-            <label className="mb-2 block text-sm text-slate-400">Latitude</label>
+            <label className="mb-2 block text-sm text-slate-400">{t("weather.latitude")}</label>
             <input
               type="number"
               step="0.01"
@@ -117,7 +119,7 @@ function WeatherForecast() {
           </div>
 
           <div className="flex-1">
-            <label className="mb-2 block text-sm text-slate-400">Longitude</label>
+            <label className="mb-2 block text-sm text-slate-400">{t("weather.longitude")}</label>
             <input
               type="number"
               step="0.01"
@@ -135,7 +137,7 @@ function WeatherForecast() {
             disabled={loading}
             className="rounded-lg bg-cyan-500 px-6 py-2.5 font-medium text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? "Loading..." : "Update"}
+            {loading ? t("weather.loading") : t("weather.update")}
           </button>
         </div>
 
@@ -156,33 +158,33 @@ function WeatherForecast() {
 
       {loading && !weather && (
         <div className="rounded-xl border border-slate-800 bg-slate-900 p-10 text-center text-slate-400">
-          Loading weather intelligence...
+          {t("weather.loadingWeather")}
         </div>
       )}
 
       {weather && (
         <>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <WeatherCard title="Temperature" value={formatNumber(weather.current?.temperature_c)} unit="°C" />
-            <WeatherCard title="Humidity" value={formatNumber(weather.current?.humidity_pct)} unit="%" />
-            <WeatherCard title="Precipitation" value={formatNumber(weather.current?.precipitation_mm)} unit="mm" />
-            <WeatherCard title="Soil Moisture" value={formatNumber(weather.current?.soil_moisture_pct)} unit="%" />
+            <WeatherCard title={t("weather.temperature")} value={formatNumber(weather.current?.temperature_c)} unit="°C" />
+            <WeatherCard title={t("weather.humidity")} value={formatNumber(weather.current?.humidity_pct)} unit="%" />
+            <WeatherCard title={t("weather.precipitation")} value={formatNumber(weather.current?.precipitation_mm)} unit="mm" />
+            <WeatherCard title={t("weather.soilMoisture")} value={formatNumber(weather.current?.soil_moisture_pct)} unit="%" />
           </div>
 
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
-              <p className="text-sm text-slate-400">Current Conditions</p>
+              <p className="text-sm text-slate-400">{t("weather.currentConditions")}</p>
               <div className="mt-3 flex items-center justify-between">
                 <div>
                   <p className="text-xl font-semibold text-white">
                     {weather.current?.weather_description || "—"}
                   </p>
                   <p className="mt-1 text-sm text-slate-500">
-                    {weather.current?.time || "Current"}
+                    {weather.current?.time || t("weather.current")}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-slate-400">Wind</p>
+                  <p className="text-sm text-slate-400">{t("weather.wind")}</p>
                   <p className="text-lg font-semibold text-white">
                     {formatNumber(weather.current?.wind_speed_kmh)}{" "}
                     <span className="text-sm font-normal text-slate-500">km/h</span>
@@ -192,7 +194,7 @@ function WeatherForecast() {
             </div>
 
             <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
-              <p className="text-sm text-slate-400">Current AI Landslide Risk</p>
+              <p className="text-sm text-slate-400">{t("weather.currentAIRisk")}</p>
               {risk?.prediction ? (
                 <div className="mt-3 flex items-center justify-between">
                   <div>
@@ -200,11 +202,11 @@ function WeatherForecast() {
                       {risk.prediction.risk_score}
                     </p>
                     <p className={`mt-1 text-sm font-medium ${getRiskTextColor(risk.prediction.risk_score)}`}>
-                      {getRiskBand(risk.prediction.risk_score)}
+                      {getRiskBand(risk.prediction.risk_score, t)}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-slate-400">Probability</p>
+                    <p className="text-sm text-slate-400">{t("weather.probability")}</p>
                     <p className="text-lg font-semibold text-white">
                       {formatProbability(risk.prediction.probability)}
                     </p>
@@ -214,7 +216,7 @@ function WeatherForecast() {
                   </div>
                 </div>
               ) : (
-                <p className="mt-3 text-slate-500">Risk data unavailable.</p>
+                <p className="mt-3 text-slate-500">{t("weather.riskDataUnavailable")}</p>
               )}
             </div>
           </div>
@@ -223,11 +225,10 @@ function WeatherForecast() {
             <div className="flex flex-col justify-between gap-2 md:flex-row md:items-center">
               <div>
                 <h2 className="text-xl font-semibold text-white">
-                  7-Day AI Landslide Risk Forecast
+                  {t("weather.sevenDayForecast")}
                 </h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  Daily risk is calculated from forecast weather plus the location&apos;s
-                  terrain and geological features.
+                  {t("weather.sevenDayDesc")}
                 </p>
               </div>
               {riskForecast?.modelVersion && (
@@ -242,14 +243,14 @@ function WeatherForecast() {
                 <div className="min-w-[980px]">
                   <div className="grid grid-cols-7 gap-3">
                     {forecast.map((day) => (
-                      <RiskForecastDay key={day.date} day={day} />
+                      <RiskForecastDay key={day.date} day={day} t={t} />
                     ))}
                   </div>
                 </div>
               </div>
             ) : (
               <p className="mt-5 text-sm text-slate-500">
-                7-day AI risk forecast unavailable.
+                {t("weather.forecastUnavailable")}
               </p>
             )}
           </div>
@@ -257,9 +258,9 @@ function WeatherForecast() {
           {forecast.length > 0 && (
             <div className="mt-6 grid gap-6 lg:grid-cols-2">
               <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-                <h2 className="text-xl font-semibold text-white">Rainfall Outlook</h2>
+                <h2 className="text-xl font-semibold text-white">{t("weather.rainfallOutlook")}</h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  Forecast precipitation and the rainfall values passed into the model.
+                  {t("weather.rainfallOutlookDesc")}
                 </p>
                 <div className="mt-5 space-y-4">
                   {forecast.map((day) => (
@@ -269,13 +270,13 @@ function WeatherForecast() {
               </div>
 
               <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-                <h2 className="text-xl font-semibold text-white">AI Risk Drivers</h2>
+                <h2 className="text-xl font-semibold text-white">{t("weather.aiRiskDrivers")}</h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  Strongest SHAP factors returned by the landslide model for each day.
+                  {t("weather.aiRiskDriversDesc")}
                 </p>
                 <div className="mt-5 space-y-4">
                   {forecast.map((day) => (
-                    <RiskDriverRow key={day.date} day={day} />
+                    <RiskDriverRow key={day.date} day={day} t={t} />
                   ))}
                 </div>
               </div>
@@ -299,7 +300,7 @@ function WeatherCard({ title, value, unit }) {
   );
 }
 
-function RiskForecastDay({ day }) {
+function RiskForecastDay({ day, t }) {
   const score = Number(day?.prediction?.risk_score);
   const factors = Array.isArray(day?.prediction?.factors)
     ? day.prediction.factors.filter(
@@ -317,19 +318,19 @@ function RiskForecastDay({ day }) {
           {Number.isFinite(score) ? score : "—"}
         </p>
         <p className={`mt-1 text-sm font-medium ${getRiskTextColor(score)}`}>
-          {getRiskBand(score)}
+          {getRiskBand(score, t)}
         </p>
       </div>
 
       <div className="mt-4 space-y-2 border-t border-slate-800/80 pt-4 text-xs">
-        <MetricRow label="Probability" value={formatProbability(day?.prediction?.probability)} />
-        <MetricRow label="Rainfall 24h" value={`${formatNumber(day?.modelInputs?.rainfall_24h_mm)} mm`} />
-        <MetricRow label="Soil moisture" value={`${formatNumber(day?.modelInputs?.soil_moisture_pct)}%`} />
+        <MetricRow label={t("weather.probability")} value={formatProbability(day?.prediction?.probability)} />
+        <MetricRow label={t("weather.rainfall24h")} value={`${formatNumber(day?.modelInputs?.rainfall_24h_mm)} mm`} />
+        <MetricRow label={t("weather.soilMoistureLabel")} value={`${formatNumber(day?.modelInputs?.soil_moisture_pct)}%`} />
       </div>
 
       {factors.length > 0 && (
         <div className="mt-4 border-t border-slate-800/80 pt-3">
-          <p className="text-[11px] uppercase tracking-wide text-slate-500">Main factors</p>
+          <p className="text-[11px] uppercase tracking-wide text-slate-500">{t("weather.mainFactors")}</p>
           <div className="mt-2 space-y-1.5">
             {factors.map((factor, index) => (
               <div
@@ -364,7 +365,7 @@ function MetricRow({ label, value }) {
   );
 }
 
-function RiskDriverRow({ day }) {
+function RiskDriverRow({ day, t }) {
   const factors = Array.isArray(day?.prediction?.factors)
     ? day.prediction.factors.slice(0, 3)
     : [];
@@ -388,7 +389,7 @@ function RiskDriverRow({ day }) {
               <div className="min-w-0">
                 <p className="truncate text-slate-300">{factor.name}</p>
                 <p className="mt-0.5 text-xs text-slate-500">
-                  {formatFactorValue(factor.value, factor.unit)}
+                  {formatFactorValue(factor.value, factor.unit, t)}
                 </p>
               </div>
               <div className="shrink-0 text-right">
@@ -402,10 +403,10 @@ function RiskDriverRow({ day }) {
                   }
                 >
                   {factor.direction === "increases_risk"
-                    ? "Increases risk"
+                    ? t("weather.increasesRisk")
                     : factor.direction === "decreases_risk"
-                    ? "Decreases risk"
-                    : "Neutral"}
+                    ? t("weather.decreasesRisk")
+                    : t("weather.neutral")}
                 </p>
                 <p className="text-xs text-slate-500">
                   {Number.isFinite(Number(factor.relative_contribution_pct))
@@ -417,7 +418,7 @@ function RiskDriverRow({ day }) {
           ))}
         </div>
       ) : (
-        <p className="mt-3 text-sm text-slate-500">Model factors unavailable.</p>
+        <p className="mt-3 text-sm text-slate-500">{t("weather.modelFactorsUnavailable")}</p>
       )}
     </div>
   );
@@ -484,26 +485,26 @@ function formatProbability(value) {
   return `${(Number(value) * 100).toFixed(1)}%`;
 }
 
-function formatFactorValue(value, unit) {
+function formatFactorValue(value, unit, t) {
   if (
     value === null ||
     value === undefined ||
     Number.isNaN(Number(value))
   ) {
-    return "Value unavailable";
+    return t ? t("weather.valueUnavailable") : "Value unavailable";
   }
   const formatted =
     typeof value === "number" ? value.toFixed(2) : String(value);
   return unit ? `${formatted} ${unit}` : formatted;
 }
 
-function getRiskBand(score) {
+function getRiskBand(score, t) {
   const numericScore = Number(score);
-  if (!Number.isFinite(numericScore)) return "Unavailable";
-  if (numericScore < 25) return "Low";
-  if (numericScore < 50) return "Moderate";
-  if (numericScore < 75) return "High";
-  return "Very High";
+  if (!Number.isFinite(numericScore)) return t ? t("risk.unavailable") : "Unavailable";
+  if (numericScore < 25) return t ? t("risk.low") : "Low";
+  if (numericScore < 50) return t ? t("risk.moderate") : "Moderate";
+  if (numericScore < 75) return t ? t("risk.high") : "High";
+  return t ? t("risk.veryHigh") : "Very High";
 }
 
 function getRiskTextColor(score) {

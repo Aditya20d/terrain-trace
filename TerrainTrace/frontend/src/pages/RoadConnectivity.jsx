@@ -13,6 +13,7 @@ import {
   useMapEvents,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import { useLanguage } from "../i18n/LanguageContext";
 
 const API_BASE =
   import.meta.env.VITE_API_BASE_URL ||
@@ -28,19 +29,20 @@ const DEFAULT_ZOOM = 10;
 const RISK_FILTERS = [
   {
     key: "all",
-    label: "All Roads",
+    labelKey: "roads.allRoads",
   },
   {
     key: "high",
-    label: "High+",
+    labelKey: "roads.highPlusRisk",
   },
   {
     key: "very-high",
-    label: "Very High",
+    labelKey: "roads.veryHighRisk",
   },
 ];
 
 function RoadConnectivity() {
+  const { t } = useLanguage();
   const [roads, setRoads] = useState([]);
   const [summary, setSummary] =
     useState({
@@ -221,49 +223,46 @@ function RoadConnectivity() {
       {/* Header */}
       <div className="mb-8">
         <p className="text-sm font-medium uppercase tracking-wider text-cyan-400">
-          Infrastructure Intelligence
+          {t("roads.sectionLabel")}
         </p>
 
         <h1 className="mt-2 text-3xl font-bold text-white">
-          AI Landslide-Prone Roads
+          {t("roads.title")}
         </h1>
 
         <p className="mt-3 max-w-4xl text-slate-400">
-          Screen major road corridors using TerrainTrace
-          AI landslide-risk predictions. Road colors represent
-          the predicted risk at a representative point on each
-          road.
+          {t("roads.description")}
         </p>
       </div>
 
       {/* Summary */}
       <div className="mb-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <SummaryCard
-          title="Roads Scored"
+          title={t("roads.roadsScored")}
           value={summary.total}
-          subtitle="Current viewport"
+          subtitle={t("roads.currentViewport")}
         />
 
         <SummaryCard
-          title="High+ Risk"
+          title={t("roads.highPlusRisk")}
           value={summary.highRiskRoads}
-          subtitle="Risk score ≥ 50"
+          subtitle={t("roads.riskScoreGte50")}
           valueClass="text-orange-400"
         />
 
         <SummaryCard
-          title="Very High Risk"
+          title={t("roads.veryHighRisk")}
           value={
             summary.veryHighRiskRoads
           }
-          subtitle="Risk score ≥ 75"
+          subtitle={t("roads.riskScoreGte75")}
           valueClass="text-red-400"
         />
 
         <SummaryCard
-          title="ML Model"
+          title={t("roads.mlModel")}
           value="v1"
-          subtitle="CatBoost classifier"
+          subtitle={t("roads.catboostClassifier")}
           valueClass="text-cyan-400"
         />
       </div>
@@ -273,12 +272,11 @@ function RoadConnectivity() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="text-lg font-semibold text-white">
-              Risk Filter
+              {t("roads.riskFilter")}
             </h2>
 
             <p className="mt-1 text-sm text-slate-500">
-              Focus the map on the road risk levels
-              that need attention.
+              {t("roads.riskFilterDesc")}
             </p>
           </div>
 
@@ -304,7 +302,7 @@ function RoadConnectivity() {
                         : "border-slate-700 bg-slate-950 text-slate-500 hover:border-slate-600 hover:text-slate-300"
                     }`}
                   >
-                    {filter.label}
+                    {t(filter.labelKey)}
                   </button>
                 );
               }
@@ -318,23 +316,22 @@ function RoadConnectivity() {
         <div className="flex flex-col gap-3 border-b border-slate-800 px-5 py-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="font-semibold text-white">
-              Road Risk Map
+              {t("roads.roadRiskMap")}
             </h2>
 
             <p className="mt-1 text-xs text-slate-500">
-              Pan or zoom to refresh the AI road-risk
-              results for the current viewport.
+              {t("roads.roadRiskMapDesc")}
             </p>
           </div>
 
           <div className="text-xs text-slate-500">
             {loading
-              ? "Scoring roads..."
+              ? t("roads.scoringRoads")
               : lastUpdated
               ? `Updated ${formatTimestamp(
                   lastUpdated
                 )}`
-              : "Ready"}
+              : t("roads.ready")}
           </div>
         </div>
 
@@ -378,11 +375,11 @@ function RoadConnectivity() {
 
                   const name =
                     properties.name ||
-                    "Unnamed road";
+                    t("roads.unnamedRoad");
 
                   const highway =
                     properties.highway ||
-                    "Unknown";
+                    t("roads.unknown");
 
                   const score =
                     Number(
@@ -406,7 +403,7 @@ function RoadConnectivity() {
                       ? `
                         <div style="margin-top:10px;padding-top:8px;border-top:1px solid #e2e8f0">
                           <div style="font-weight:600;margin-bottom:5px">
-                            Main factors
+                            ${t("roads.mainFactors")}
                           </div>
                           ${factors
                             .map(
@@ -421,11 +418,11 @@ function RoadConnectivity() {
                                   ${
                                     factor.direction ===
                                     "increases_risk"
-                                      ? "↑ increases"
+                                      ? t("roads.increases")
                                       : factor.direction ===
                                         "decreases_risk"
-                                      ? "↓ decreases"
-                                      : "neutral"
+                                      ? t("roads.decreases")
+                                      : t("risk.neutral")
                                   }
                                 </div>
                               `
@@ -440,7 +437,7 @@ function RoadConnectivity() {
                       score
                     )
                       ? `${score}/100`
-                      : "Unavailable";
+                      : t("risk.unavailable");
 
                   const probabilityText =
                     Number.isFinite(
@@ -461,7 +458,7 @@ function RoadConnectivity() {
                       </div>
 
                       <div style="margin:3px 0">
-                        <strong>Road class:</strong>
+                        <strong>${t("roads.roadClass")}:</strong>
                         ${escapeHtml(
                           highway
                         )}
@@ -471,7 +468,7 @@ function RoadConnectivity() {
                         properties.ref
                           ? `
                             <div style="margin:3px 0">
-                              <strong>Reference:</strong>
+                              <strong>${t("roads.reference")}:</strong>
                               ${escapeHtml(
                                 properties.ref
                               )}
@@ -481,22 +478,21 @@ function RoadConnectivity() {
                       }
 
                       <div style="margin:8px 0 3px">
-                        <strong>AI risk:</strong>
+                        <strong>${t("roads.aiRisk")}:</strong>
                         <span style="font-weight:700">
                           ${scoreText}
                         </span>
                       </div>
 
                       <div style="margin:3px 0">
-                        <strong>Risk band:</strong>
+                        <strong>${t("roads.riskBand")}:</strong>
                         ${escapeHtml(
-                          risk.band ||
-                            "Unavailable"
+                          risk.band ? t(`risk.${risk.band.replace(" ", "").replace("+", "").toLowerCase()}`) : t("risk.unavailable")
                         )}
                       </div>
 
                       <div style="margin:3px 0">
-                        <strong>Model probability:</strong>
+                        <strong>${t("roads.modelProbability")}:</strong>
                         ${probabilityText}
                       </div>
 
@@ -504,7 +500,7 @@ function RoadConnectivity() {
                         risk.samplePoint
                           ? `
                             <div style="margin:3px 0">
-                              <strong>Sample point:</strong>
+                              <strong>${t("roads.samplePoint")}:</strong>
                               ${Number(
                                 risk
                                   .samplePoint
@@ -527,9 +523,7 @@ function RoadConnectivity() {
                       ${factorHtml}
 
                       <div style="margin-top:10px;padding-top:8px;border-top:1px solid #e2e8f0;font-size:11px;color:#64748b">
-                        Screening result at a representative
-                        road point. Not a confirmed landslide
-                        or official road closure.
+                        ${t("roads.popupDisclaimer")}
                       </div>
                     </div>
                   `);
@@ -540,7 +534,7 @@ function RoadConnectivity() {
 
           {loading && (
             <div className="pointer-events-none absolute left-4 top-4 z-[500] rounded-lg border border-slate-700 bg-slate-950/90 px-4 py-2 text-sm text-slate-300 shadow-lg">
-              Running AI road-risk analysis...
+              {t("roads.runningAnalysis")}
             </div>
           )}
 
@@ -550,8 +544,7 @@ function RoadConnectivity() {
             !error && (
               <div className="pointer-events-none absolute inset-x-0 top-5 z-[500] flex justify-center">
                 <div className="rounded-lg border border-slate-700 bg-slate-950/90 px-4 py-2 text-sm text-slate-400 shadow-lg">
-                  No roads match the selected risk
-                  filter in this viewport.
+                  {t("roads.noRoadsMatch")}
                 </div>
               </div>
             )}
@@ -569,32 +562,36 @@ function RoadConnectivity() {
       {/* Legend */}
       <div className="mt-6 rounded-xl border border-slate-800 bg-slate-900 p-5">
         <h2 className="text-lg font-semibold text-white">
-          AI Risk Legend
+          {t("roads.aiRiskLegend")}
         </h2>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <RiskLegend
-            label="Low"
+            label={t("risk.low")}
             range="0–24"
             color="#10b981"
+            t={t}
           />
 
           <RiskLegend
-            label="Moderate"
+            label={t("risk.moderate")}
             range="25–49"
             color="#eab308"
+            t={t}
           />
 
           <RiskLegend
-            label="High"
+            label={t("risk.high")}
             range="50–74"
             color="#f97316"
+            t={t}
           />
 
           <RiskLegend
-            label="Very High"
+            label={t("risk.veryHigh")}
             range="75–100"
             color="#ef4444"
+            t={t}
           />
         </div>
       </div>
@@ -602,12 +599,12 @@ function RoadConnectivity() {
       {/* Road class counts */}
       <div className="mt-6 rounded-xl border border-slate-800 bg-slate-900 p-5">
         <h2 className="text-lg font-semibold text-white">
-          Road Classes in Viewport
+          {t("roads.roadClassesInViewport")}
         </h2>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <RoadClassCount
-            label="Trunk"
+            label={t("roads.trunk")}
             value={
               summary.highwayCounts
                 ?.trunk || 0
@@ -615,7 +612,7 @@ function RoadConnectivity() {
           />
 
           <RoadClassCount
-            label="Primary"
+            label={t("roads.primary")}
             value={
               summary.highwayCounts
                 ?.primary || 0
@@ -623,7 +620,7 @@ function RoadConnectivity() {
           />
 
           <RoadClassCount
-            label="Secondary"
+            label={t("roads.secondary")}
             value={
               summary.highwayCounts
                 ?.secondary || 0
@@ -631,7 +628,7 @@ function RoadConnectivity() {
           />
 
           <RoadClassCount
-            label="Tertiary"
+            label={t("roads.tertiary")}
             value={
               summary.highwayCounts
                 ?.tertiary || 0
@@ -643,42 +640,18 @@ function RoadConnectivity() {
       {/* How Road Risk is Calculated */}
       <div className="mt-6 rounded-xl border border-slate-800 bg-slate-900 p-5">
         <h2 className="text-lg font-semibold text-white">
-          How Road Risk is Calculated
+          {t("roads.howCalculated")}
         </h2>
 
         <div className="mt-4 space-y-3 text-sm leading-relaxed text-slate-400">
-          <p>
-            Each road in the current viewport is scored using the
-            TerrainTrace CatBoost AI model. A representative midpoint
-            is selected on each road segment, and environmental
-            features (terrain, geology, weather, proximity to faults)
-            are extracted for that location.
-          </p>
-
-          <p>
-            The model produces a landslide probability which is
-            converted to a 0–100 risk score. Roads are then
-            color-coded by risk band: Low (0–24), Moderate (25–49),
-            High (50–74), and Very High (75–100).
-          </p>
-
-          <p>
-            Because each road is screened at a single representative
-            point, the result reflects the AI-predicted landslide risk
-            near that road — not a confirmed landslide or official
-            road-closure status. Actual conditions may vary along the
-            full length of the road.
-          </p>
+          <p>{t("roads.howCalculatedP1")}</p>
+          <p>{t("roads.howCalculatedP2")}</p>
+          <p>{t("roads.howCalculatedP3")}</p>
         </div>
       </div>
 
       <p className="mt-4 text-xs leading-5 text-slate-600">
-        Road geometry source: OpenStreetMap data
-        distributed through the Geofabrik Northeast India
-        regional extract. AI scores are model predictions for
-        representative road points and should not be interpreted
-        as confirmed landslides or official road-closure
-        information.
+        {t("roads.disclaimer")}
       </p>
     </div>
   );
@@ -761,24 +734,25 @@ function RiskLegend({
   label,
   range,
   color,
+  t,
 }) {
   return (
     <div className="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-950 p-3">
       <span
-        className="h-2 w-10 rounded-full"
+        className="block h-3 w-3 shrink-0 rounded-full"
         style={{
           backgroundColor: color,
         }}
       />
 
       <div>
-        <p className="text-sm font-medium text-white">
+        <div className="text-sm font-medium text-slate-200">
           {label}
-        </p>
+        </div>
 
-        <p className="text-xs text-slate-500">
-          Score {range}
-        </p>
+        <div className="text-xs text-slate-500">
+          {t("risk.score")} {range}
+        </div>
       </div>
     </div>
   );

@@ -1,21 +1,21 @@
 import { NavLink } from "react-router-dom";
-import { useState } from "react";
+import { useLanguage } from "../i18n/LanguageContext";
 
 const navItems = [
   {
-    name: "Risk Map",
+    key: "nav.riskMap",
     path: "/map",
   },
   {
-    name: "Road Connectivity",
+    key: "nav.roadConnectivity",
     path: "/roads",
   },
   {
-    name: "Weather Forecast",
+    key: "nav.weatherForecast",
     path: "/weather",
   },
   {
-    name: "Emergency Response",
+    key: "nav.emergencyResponse",
     path: "/emergency",
   },
 ];
@@ -41,35 +41,36 @@ const languages = [
     code: "ne",
     name: "नेपाली",
   },
+  {
+    code: "mni",
+    name: "মৈতৈলোন্ (Manipuri)",
+  },
+  {
+    code: "lus",
+    name: "Mizo ṭawng",
+  },
+  {
+    code: "kha",
+    name: "Ka Ktien Khasi",
+  },
+  {
+    code: "grt",
+    name: "A·chik (Garo)",
+  },
+  {
+    code: "trp",
+    name: "Kokborok",
+  },
 ];
 
 function Navbar() {
-  const [
-    language,
-    setLanguage,
-  ] = useState(
-    localStorage.getItem(
-      "terraintrace-language"
-    ) || "en"
-  );
+  const { language, setLanguage, t } =
+    useLanguage();
 
   function handleLanguageChange(
     event
   ) {
-    const value =
-      event.target.value;
-
-    setLanguage(value);
-
-    localStorage.setItem(
-      "terraintrace-language",
-      value
-    );
-
-    /*
-     * Full translation state will be connected
-     * to the application UI in the next step.
-     */
+    setLanguage(event.target.value);
   }
 
   return (
@@ -80,19 +81,11 @@ function Navbar() {
           to="/map"
           className="flex shrink-0 items-center gap-3"
         >
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-sm font-bold">
-            TT
-          </div>
-
-          <div className="hidden sm:block">
-            <div className="text-lg font-bold">
-              TerrainTrace
-            </div>
-
-            <div className="text-[9px] uppercase tracking-[0.18em] text-slate-500">
-              Landslide Early Warning
-            </div>
-          </div>
+          <img
+            src="/terraintrace-logo.png"
+            alt="TerrainTrace"
+            className="h-9 w-auto rounded-lg object-contain"
+          />
         </NavLink>
 
         {/* Navigation */}
@@ -111,7 +104,7 @@ function Navbar() {
                   ].join(" ")
                 }
               >
-                {item.name}
+                {t(item.key)}
               </NavLink>
             )
           )}

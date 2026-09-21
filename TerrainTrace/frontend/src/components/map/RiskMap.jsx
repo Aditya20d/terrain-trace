@@ -11,6 +11,7 @@ import {
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { getBatchRiskPredictions } from "../../services/api";
+import { useLanguage } from "../../i18n/LanguageContext";
 
 const BOUNDARY_URL =
   "/data/northeast_states.geojson";
@@ -38,43 +39,43 @@ function getRiskColor(probability) {
   return "red";
 }
 
-function getRiskLabel(probability) {
+function getRiskLabel(probability, t) {
   const score = probability * 100;
 
-  if (score < 25) return "Low";
-  if (score < 50) return "Moderate";
-  if (score < 75) return "High";
-  return "Very High";
+  if (score < 25) return t("risk.low");
+  if (score < 50) return t("risk.moderate");
+  if (score < 75) return t("risk.high");
+  return t("risk.veryHigh");
 }
 
-function getRiskDescription(probability) {
+function getRiskDescription(probability, t) {
   const score = probability * 100;
 
   if (score < 25) {
-    return "low landslide risk.";
+    return t("risk.lowRiskDesc");
   }
 
   if (score < 50) {
-    return "moderate landslide risk.";
+    return t("risk.moderateRiskDesc");
   }
 
   if (score < 75) {
-    return "elevated landslide risk.";
+    return t("risk.elevatedRiskDesc");
   }
 
-  return "very high landslide risk.";
+  return t("risk.veryHighRiskDesc");
 }
 
 /* =========================================================
    FEATURE EXPLANATION HELPERS
 ========================================================= */
 
-function formatFactorValue(factor) {
+function formatFactorValue(factor, t) {
   if (
     factor?.value === null ||
     factor?.value === undefined
   ) {
-    return "Unavailable";
+    return t("risk.unavailable");
   }
 
   if (
@@ -102,16 +103,16 @@ function getContributionSymbol(direction) {
   return "•";
 }
 
-function getContributionText(direction) {
+function getContributionText(direction, t) {
   if (direction === "increases_risk") {
-    return "Increases risk";
+    return t("risk.increasesRisk");
   }
 
   if (direction === "decreases_risk") {
-    return "Reduces risk";
+    return t("risk.reducesRisk");
   }
 
-  return "Neutral";
+  return t("risk.neutral");
 }
 
 function getContributionClass(direction) {
@@ -800,6 +801,8 @@ function MapViewportWatcher({
 ========================================================= */
 
 function RiskMap() {
+  const { t } = useLanguage();
+
   const [
     predictions,
     setPredictions,
@@ -1138,7 +1141,12 @@ function RiskMap() {
             RISK POINTS
         ================================================== */}
 
-        {predictions.map(
+        {predictions
+          .filter((item) => {
+            const probability = Number(item?.prediction?.probability) || 0;
+            return probability >= 0.5;
+          })
+          .map(
           (item) => {
             const probability =
               Number(
@@ -1153,7 +1161,8 @@ function RiskMap() {
 
             const riskLabel =
               getRiskLabel(
-                probability
+                probability,
+                t
               );
 
             const riskScore =
@@ -1201,19 +1210,16 @@ function RiskMap() {
                     {/* HEADER */}
                     <div className="border-b border-gray-200 pb-3">
                       <div className="text-base font-bold text-gray-900">
-                        Landslide Risk
+                        {t("risk.landslideRisk")}
                       </div>
 
                       <div
                         className={`mt-1 text-lg font-bold ${
-                          riskLabel ===
-                          "Very High"
+                          probability >= 0.75
                             ? "text-red-600"
-                            : riskLabel ===
-                                "High"
+                            : probability >= 0.5
                               ? "text-orange-600"
-                              : riskLabel ===
-                                  "Moderate"
+                              : probability >= 0.25
                                 ? "text-yellow-600"
                                 : "text-emerald-600"
                         }`}
@@ -1223,14 +1229,14 @@ function RiskMap() {
 
                       <div className="mt-1 flex items-center gap-3 text-xs text-gray-600">
                         <span>
-                          Score:{" "}
+                          {t("risk.score")}:{" "}
                           <strong>
                             {riskScore}
                           </strong>
                         </span>
 
                         <span>
-                          Probability:{" "}
+                          {t("risk.probability")}:{" "}
                           <strong>
                             {(
                               probability *
@@ -1247,7 +1253,7 @@ function RiskMap() {
                     {/* WHY HIGH RISK */}
                     <div className="pt-3">
                       <div className="font-semibold text-gray-900">
-                        Why is this area at risk?
+                        {t("risk.whyAtRisk")}
                       </div>
 
                      
@@ -1295,7 +1301,8 @@ function RiskMap() {
 
                                       <div className="ml-5 text-xs text-gray-500">
                                         {formatFactorValue(
-                                          factor
+                                          factor,
+                                          t
                                         )}
                                       </div>
                                     </div>
@@ -1323,7 +1330,8 @@ function RiskMap() {
 
                                   <div className="ml-5 mt-0.5 text-[10px] text-gray-400">
                                     {getContributionText(
-                                      direction
+                                      direction,
+                                      t
                                     )}
                                   </div>
                                 </div>
@@ -1333,8 +1341,7 @@ function RiskMap() {
                         </div>
                       ) : (
                         <div className="mt-3 rounded-lg bg-gray-50 p-3 text-xs text-gray-500">
-                          Feature contribution data is
-                          not available for this prediction.
+                          {t("risk.noFactorData")}
                         </div>
                       )}
                     </div>
@@ -1343,7 +1350,8 @@ function RiskMap() {
                     <div className="mt-4 rounded-lg bg-gray-50 p-3">
                       <div className="text-xs leading-5 text-gray-600">
                         {getRiskDescription(
-                          probability
+                          probability,
+                          t
                         )}
                       </div>
                     </div>
@@ -1351,7 +1359,7 @@ function RiskMap() {
                     {/* LOCATION */}
                     <div className="mt-3 border-t border-gray-200 pt-3 text-xs text-gray-500">
                       <div>
-                        Latitude:{" "}
+                        {t("risk.latitude")}:{" "}
                         <span className="font-medium text-gray-700">
                           {
                             item
@@ -1362,7 +1370,7 @@ function RiskMap() {
                       </div>
 
                       <div className="mt-1">
-                        Longitude:{" "}
+                        {t("risk.longitude")}:{" "}
                         <span className="font-medium text-gray-700">
                           {
                             item
@@ -1383,24 +1391,7 @@ function RiskMap() {
             MAP STATUS
         ================================================== */}
 
-        <div className="absolute left-4 top-4 z-[1000] max-w-sm rounded-lg bg-white/95 px-4 py-2 text-sm shadow">
-          {!boundary
-            ? "Loading Northeast India boundary..."
-            : zoom <
-                MIN_RISK_ZOOM
-              ? "Zoom in to load AI risk analysis"
-              : loading
-                ? `Analyzing ${pointCount} Northeast points...`
-                : `Showing ${predictions.length} loaded risk points`}
-        </div>
 
-        {loading &&
-          predictions.length >
-            0 && (
-            <div className="absolute right-4 top-4 z-[1000] rounded-lg bg-white/90 px-3 py-2 text-xs text-gray-600 shadow">
-              Updating current area…
-            </div>
-          )}
 
         {/* =================================================
             RISK LEGEND
@@ -1408,31 +1399,31 @@ function RiskMap() {
 
         <div className="absolute bottom-5 left-4 z-[1000] rounded-xl bg-white/95 p-4 shadow">
           <div className="mb-2 text-sm font-semibold text-gray-900">
-            Risk Severity
+            {t("risk.riskSeverity")}
           </div>
 
           <div className="space-y-1.5 text-xs">
             <LegendItem
               color="green"
-              label="Low"
+              label={t("risk.low")}
               range="0–25"
             />
 
             <LegendItem
               color="yellow"
-              label="Moderate"
+              label={t("risk.moderate")}
               range="25–50"
             />
 
             <LegendItem
               color="orange"
-              label="High"
+              label={t("risk.high")}
               range="50–75"
             />
 
             <LegendItem
               color="red"
-              label="Very High"
+              label={t("risk.veryHigh")}
               range="75–100"
             />
           </div>
