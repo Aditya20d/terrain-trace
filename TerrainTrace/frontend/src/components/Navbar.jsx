@@ -18,6 +18,10 @@ const navItems = [
     key: "nav.emergencyResponse",
     path: "/emergency",
   },
+  {
+    key: "nav.reportLandslide",
+    path: "/report",
+  },
 ];
 
 const languages = [

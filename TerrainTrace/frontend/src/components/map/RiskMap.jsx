@@ -1404,18 +1404,6 @@ function RiskMap() {
 
           <div className="space-y-1.5 text-xs">
             <LegendItem
-              color="green"
-              label={t("risk.low")}
-              range="0–25"
-            />
-
-            <LegendItem
-              color="yellow"
-              label={t("risk.moderate")}
-              range="25–50"
-            />
-
-            <LegendItem
               color="orange"
               label={t("risk.high")}
               range="50–75"

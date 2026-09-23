@@ -565,21 +565,7 @@ function RoadConnectivity() {
           {t("roads.aiRiskLegend")}
         </h2>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <RiskLegend
-            label={t("risk.low")}
-            range="0–24"
-            color="#10b981"
-            t={t}
-          />
-
-          <RiskLegend
-            label={t("risk.moderate")}
-            range="25–49"
-            color="#eab308"
-            t={t}
-          />
-
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
           <RiskLegend
             label={t("risk.high")}
             range="50–74"

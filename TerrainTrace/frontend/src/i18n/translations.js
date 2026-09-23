@@ -4,7 +4,8 @@ export const translations = {
       riskMap: "Risk Map",
       roadConnectivity: "Road Connectivity",
       weatherForecast: "Weather Forecast",
-      emergencyResponse: "Emergency Response"
+      emergencyResponse: "Emergency Response",
+      reportLandslide: "Report Landslide"
     },
     risk: {
       landslideRisk: "Landslide Risk",
@@ -165,6 +166,38 @@ export const translations = {
       disasterManagement: "Disaster Management",
       contactLocal: "Contact your local district disaster management authority for region-specific emergency numbers.",
       disclaimer: "This page provides general guidance for landslide emergencies. Always follow official instructions from local authorities and emergency services. TerrainTrace AI predictions are for awareness purposes and do not replace official emergency alerts."
+    },
+    report: {
+          "sectionLabel": "Community Reports",
+          "title": "Report a Landslide",
+          "description": "Submit a landslide report with photos and location details to help authorities and your community respond faster.",
+          "newReport": "New Landslide Report",
+          "location": "Location",
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "useMyLocation": "Use My Location",
+          "severity": "Severity",
+          "detailsLabel": "Description",
+          "detailsPlaceholder": "Describe the landslide — size, damage, blocked roads, injuries, etc.",
+          "images": "Photos",
+          "maxImages": "max 5 images",
+          "reporterName": "Your Name",
+          "contactInfo": "Contact (phone/email)",
+          "optional": "optional",
+          "namePlaceholder": "Enter your name",
+          "contactPlaceholder": "Phone number or email",
+          "submit": "Submit Report",
+          "submitting": "Submitting...",
+          "cancel": "Cancel",
+          "submitSuccess": "Landslide report submitted successfully and saved locally.",
+          "pastReports": "Past Reports",
+          "noReports": "No landslide reports yet. Be the first to submit one.",
+          "delete": "Delete Report",
+          "invalidCoords": "Please enter valid latitude and longitude.",
+          "descriptionRequired": "Please provide a description of the landslide.",
+          "geolocationUnavailable": "Geolocation is not available in your browser.",
+          "geolocationDenied": "Location access was denied. Please enter coordinates manually.",
+          "disclaimer": "Reports are stored locally on your device. They are not sent to a server. Clearing browser data will remove saved reports. For official emergency reporting, contact your local disaster management authority."
     }
   },
   hi: {
@@ -172,7 +205,8 @@ export const translations = {
       riskMap: "जोखिम मानचित्र",
       roadConnectivity: "सड़क संपर्क",
       weatherForecast: "मौसम पूर्वानुमान",
-      emergencyResponse: "आपातकालीन प्रतिक्रिया"
+      emergencyResponse: "आपातकालीन प्रतिक्रिया",
+      reportLandslide: "भूस्खलन की रिपोर्ट"
     },
     risk: {
       landslideRisk: "भूस्खलन जोखिम",
@@ -333,6 +367,38 @@ export const translations = {
       disasterManagement: "आपदा प्रबंधन",
       contactLocal: "क्षेत्र-विशिष्ट आपातकालीन नंबरों के लिए अपने स्थानीय जिला आपदा प्रबंधन प्राधिकरण से संपर्क करें।",
       disclaimer: "यह पृष्ठ भूस्खलन आपात स्थिति के लिए सामान्य मार्गदर्शन प्रदान करता है। हमेशा स्थानीय अधिकारियों और आपातकालीन सेवाओं के आधिकारिक निर्देशों का पालन करें। TerrainTrace AI भविष्यवाणियां जागरूकता उद्देश्यों के लिए हैं और आधिकारिक आपातकालीन अलर्ट को प्रतिस्थापित नहीं करती हैं।"
+    },
+    report: {
+          "sectionLabel": "सामुदायिक रिपोर्ट",
+          "title": "भूस्खलन की रिपोर्ट करें",
+          "description": "अधिकारियों और अपने समुदाय को तेज़ी से प्रतिक्रिया करने में मदद करने के लिए फ़ोटो और स्थान विवरण के साथ भूस्खलन रिपोर्ट सबमिट करें।",
+          "newReport": "नई भूस्खलन रिपोर्ट",
+          "location": "स्थान",
+          "latitude": "अक्षांश",
+          "longitude": "देशांतर",
+          "useMyLocation": "मेरा स्थान उपयोग करें",
+          "severity": "गंभीरता",
+          "detailsLabel": "विवरण",
+          "detailsPlaceholder": "भूस्खलन का वर्णन करें — आकार, क्षति, अवरुद्ध सड़कें, चोटें, आदि।",
+          "images": "फ़ोटो",
+          "maxImages": "अधिकतम 5 छवियाँ",
+          "reporterName": "आपका नाम",
+          "contactInfo": "संपर्क (फ़ोन/ईमेल)",
+          "optional": "वैकल्पिक",
+          "namePlaceholder": "अपना नाम दर्ज करें",
+          "contactPlaceholder": "फ़ोन नंबर या ईमेल",
+          "submit": "रिपोर्ट सबमिट करें",
+          "submitting": "सबमिट हो रहा है...",
+          "cancel": "रद्द करें",
+          "submitSuccess": "भूस्खलन रिपोर्ट सफलतापूर्वक सबमिट और स्थानीय रूप से सहेजी गई।",
+          "pastReports": "पिछली रिपोर्ट",
+          "noReports": "अभी तक कोई भूस्खलन रिपोर्ट नहीं। पहली सबमिट करें।",
+          "delete": "रिपोर्ट हटाएँ",
+          "invalidCoords": "कृपया वैध अक्षांश और देशांतर दर्ज करें।",
+          "descriptionRequired": "कृपया भूस्खलन का विवरण दें।",
+          "geolocationUnavailable": "आपके ब्राउज़र में जियोलोकेशन उपलब्ध नहीं है।",
+          "geolocationDenied": "स्थान पहुँच अस्वीकृत। कृपया निर्देशांक मैन्युअल रूप से दर्ज करें।",
+          "disclaimer": "रिपोर्ट आपके डिवाइस पर स्थानीय रूप से संग्रहीत हैं। ये सर्वर पर नहीं भेजी जातीं। ब्राउज़र डेटा साफ़ करने से सहेजी गई रिपोर्ट हट जाएँगी।"
     }
   },
   bn: {
@@ -340,7 +406,8 @@ export const translations = {
       riskMap: "ঝুঁকি মানচিত্র",
       roadConnectivity: "সড়ক সংযোগ",
       weatherForecast: "আবহাওয়ার পূর্বাভাস",
-      emergencyResponse: "জরুরি প্রতিক্রিয়া"
+      emergencyResponse: "জরুরি প্রতিক্রিয়া",
+      reportLandslide: "ভূমিধস রিপোর্ট"
     },
     risk: {
       landslideRisk: "ভূমিধস ঝুঁকি",
@@ -501,6 +568,38 @@ export const translations = {
       disasterManagement: "দুর্যোগ ব্যবস্থাপনা",
       contactLocal: "অঞ্চল-নির্দিষ্ট জরুরি নম্বরের জন্য আপনার স্থানীয় জেলা দুর্যোগ ব্যবস্থাপনা কর্তৃপক্ষের সাথে যোগাযোগ করুন।",
       disclaimer: "এই পৃষ্ঠাটি ভূমিধস জরুরি অবস্থার জন্য সাধারণ নির্দেশিকা প্রদান করে। সর্বদা স্থানীয় কর্তৃপক্ষ এবং জরুরি পরিষেবাগুলির অফিসিয়াল নির্দেশাবলী অনুসরণ করুন। TerrainTrace AI পূর্বাভাস সচেতনতার উদ্দেশ্যে এবং অফিসিয়াল জরুরি সতর্কতা প্রতিস্থাপন করে না।"
+    },
+    report: {
+          "sectionLabel": "সম্প্রদায় রিপোর্ট",
+          "title": "ভূমিধস রিপোর্ট করুন",
+          "description": "কর্তৃপক্ষ এবং আপনার সম্প্রদায়কে দ্রুত সাড়া দিতে সাহায্য করতে ছবি এবং অবস্থানের বিবরণ সহ ভূমিধস রিপোর্ট জমা দিন।",
+          "newReport": "নতুন ভূমিধস রিপোর্ট",
+          "location": "অবস্থান",
+          "latitude": "অক্ষাংশ",
+          "longitude": "দ্রাঘিমাংশ",
+          "useMyLocation": "আমার অবস্থান ব্যবহার করুন",
+          "severity": "তীব্রতা",
+          "detailsLabel": "বিবরণ",
+          "detailsPlaceholder": "ভূমিধসের বর্ণনা করুন — আকার, ক্ষতি, অবরুদ্ধ রাস্তা, আঘাত, ইত্যাদি।",
+          "images": "ছবি",
+          "maxImages": "সর্বোচ্চ ৫টি ছবি",
+          "reporterName": "আপনার নাম",
+          "contactInfo": "যোগাযোগ (ফোন/ইমেইল)",
+          "optional": "ঐচ্ছিক",
+          "namePlaceholder": "আপনার নাম লিখুন",
+          "contactPlaceholder": "ফোন নম্বর বা ইমেইল",
+          "submit": "রিপোর্ট জমা দিন",
+          "submitting": "জমা হচ্ছে...",
+          "cancel": "বাতিল",
+          "submitSuccess": "ভূমিধস রিপোর্ট সফলভাবে জমা এবং স্থানীয়ভাবে সংরক্ষিত হয়েছে।",
+          "pastReports": "আগের রিপোর্ট",
+          "noReports": "এখনো কোনো ভূমিধস রিপোর্ট নেই। প্রথমটি জমা দিন।",
+          "delete": "রিপোর্ট মুছুন",
+          "invalidCoords": "দয়া করে বৈধ অক্ষাংশ এবং দ্রাঘিমাংশ লিখুন।",
+          "descriptionRequired": "দয়া করে ভূমিধসের বিবরণ দিন।",
+          "geolocationUnavailable": "আপনার ব্রাউজারে জিওলোকেশন উপলব্ধ নয়।",
+          "geolocationDenied": "অবস্থান অ্যাক্সেস অস্বীকার করা হয়েছে। দয়া করে ম্যানুয়ালি স্থানাঙ্ক লিখুন।",
+          "disclaimer": "রিপোর্ট আপনার ডিভাইসে স্থানীয়ভাবে সংরক্ষিত। এগুলি সার্ভারে পাঠানো হয় না। ব্রাউজার ডেটা মুছলে সংরক্ষিত রিপোর্ট মুছে যাবে।"
     }
   },
   as: {
@@ -508,7 +607,8 @@ export const translations = {
       riskMap: "শংকা মানচিত্ৰ",
       roadConnectivity: "পথ সংযোগ",
       weatherForecast: "বতৰৰ আগজাননী",
-      emergencyResponse: "জৰুৰীকালীন সঁহাৰি"
+      emergencyResponse: "জৰুৰীকালীন সঁহাৰি",
+      reportLandslide: "ভূমিস্খলন ৰিপ'ৰ্ট"
     },
     risk: {
       landslideRisk: "ভূমিস্খলনৰ শংকা",
@@ -669,6 +769,38 @@ export const translations = {
       disasterManagement: "বিপৰ্যয় ব্যৱস্থাপনা",
       contactLocal: "অঞ্চল-নিৰ্দিষ্ট জৰুৰীকালীন নম্বৰৰ বাবে আপোনাৰ স্থানীয় জিলা বিপৰ্যয় ব্যৱস্থাপনা কৰ্তৃপক্ষৰ সৈতে যোগাযোগ কৰক।",
       disclaimer: "এই পৃষ্ঠাই ভূমিস্খলন জৰুৰীকালীন অৱস্থাৰ বাবে সাধাৰণ নিৰ্দেশনা প্ৰদান কৰে। সদায় স্থানীয় কৰ্তৃপক্ষ আৰু জৰুৰীকালীন সেৱাৰ চৰকাৰী নিৰ্দেশনা মানি চলক। TerrainTrace AI পূৰ্বানুমানবোৰ সজাগতাৰ উদ্দেশ্যে আৰু ই চৰকাৰী জৰুৰীকালীন সতৰ্কবাণীক প্ৰতিষ্ঠাপন নকৰে।"
+    },
+    report: {
+          "sectionLabel": "সম্প্ৰদায়ৰ ৰিপ'ৰ্ট",
+          "title": "ভূমিস্খলন ৰিপ'ৰ্ট কৰক",
+          "description": "কৰ্তৃপক্ষ আৰু আপোনাৰ সম্প্ৰদায়ক দ্ৰুত সঁহাৰি জনাবলৈ ফটো আৰু স্থানৰ বিৱৰণসহ ভূমিস্খলন ৰিপ'ৰ্ট দাখিল কৰক।",
+          "newReport": "নতুন ভূমিস্খলন ৰিপ'ৰ্ট",
+          "location": "স্থান",
+          "latitude": "অক্ষাংশ",
+          "longitude": "দ্ৰাঘিমাংশ",
+          "useMyLocation": "মোৰ স্থান ব্যৱহাৰ কৰক",
+          "severity": "তীব্ৰতা",
+          "detailsLabel": "বিৱৰণ",
+          "detailsPlaceholder": "ভূমিস্খলনৰ বৰ্ণনা কৰক — আকাৰ, ক্ষতি, বন্ধ পথ, আঘাত, ইত্যাদি।",
+          "images": "ফটো",
+          "maxImages": "সৰ্বাধিক ৫খন ছবি",
+          "reporterName": "আপোনাৰ নাম",
+          "contactInfo": "যোগাযোগ (ফোন/ইমেইল)",
+          "optional": "ঐচ্ছিক",
+          "namePlaceholder": "আপোনাৰ নাম লিখক",
+          "contactPlaceholder": "ফোন নম্বৰ বা ইমেইল",
+          "submit": "ৰিপ'ৰ্ট দাখিল কৰক",
+          "submitting": "দাখিল হৈ আছে...",
+          "cancel": "বাতিল",
+          "submitSuccess": "ভূমিস্খলন ৰিপ'ৰ্ট সফলভাৱে দাখিল আৰু স্থানীয়ভাৱে সংৰক্ষিত হৈছে।",
+          "pastReports": "আগৰ ৰিপ'ৰ্ট",
+          "noReports": "এতিয়ালৈকে কোনো ভূমিস্খলন ৰিপ'ৰ্ট নাই। প্ৰথমটো দাখিল কৰক।",
+          "delete": "ৰিপ'ৰ্ট মচক",
+          "invalidCoords": "অনুগ্ৰহ কৰি বৈধ অক্ষাংশ আৰু দ্ৰাঘিমাংশ দিয়ক।",
+          "descriptionRequired": "অনুগ্ৰহ কৰি ভূমিস্খলনৰ বিৱৰণ দিয়ক।",
+          "geolocationUnavailable": "আপোনাৰ ব্ৰাউজাৰত জিঅ'লকেশ্বন উপলব্ধ নহয়।",
+          "geolocationDenied": "স্থান প্ৰৱেশ অস্বীকাৰ কৰা হৈছে। অনুগ্ৰহ কৰি নিৰ্দেশাংক হাতেৰে দিয়ক।",
+          "disclaimer": "ৰিপ'ৰ্ট আপোনাৰ ডিভাইচত স্থানীয়ভাৱে সংৰক্ষিত। এইবোৰ চাৰ্ভাৰলৈ পঠোৱা নহয়। ব্ৰাউজাৰ ডেটা মচিলে সংৰক্ষিত ৰিপ'ৰ্ট মচা হ'ব।"
     }
   },
   ne: {
@@ -676,7 +808,8 @@ export const translations = {
       riskMap: "जोखिम नक्सा",
       roadConnectivity: "सडक जडान",
       weatherForecast: "मौसम पूर्वानुमान",
-      emergencyResponse: "आपतकालीन प्रतिक्रिया"
+      emergencyResponse: "आपतकालीन प्रतिक्रिया",
+      reportLandslide: "पहिरो रिपोर्ट"
     },
     risk: {
       landslideRisk: "पहिरो जोखिम",
@@ -837,6 +970,38 @@ export const translations = {
       disasterManagement: "प्रकोप व्यवस्थापन",
       contactLocal: "क्षेत्र-विशिष्ट आपतकालीन नम्बरहरूको लागि आफ्नो स्थानीय जिल्ला प्रकोप व्यवस्थापन प्राधिकरणलाई सम्पर्क गर्नुहोस्।",
       disclaimer: "यस पृष्ठले पहिरो आपतकालिनहरूको लागि सामान्य मार्गदर्शन प्रदान गर्दछ। सधैं स्थानीय अधिकारीहरू र आपतकालीन सेवाहरूबाट आधिकारिक निर्देशनहरू पालना गर्नुहोस्। TerrainTrace AI पूर्वानुमानहरू जागरूकता उद्देश्यका लागि हुन् र आधिकारिक आपतकालीन अलर्टहरू प्रतिस्थापन गर्दैनन्।"
+    },
+    report: {
+          "sectionLabel": "सामुदायिक रिपोर्ट",
+          "title": "पहिरो रिपोर्ट गर्नुहोस्",
+          "description": "अधिकारीहरू र तपाईंको समुदायलाई छिटो प्रतिक्रिया दिन मद्दत गर्न फोटो र स्थान विवरणसहित पहिरो रिपोर्ट पेश गर्नुहोस्।",
+          "newReport": "नयाँ पहिरो रिपोर्ट",
+          "location": "स्थान",
+          "latitude": "अक्षांश",
+          "longitude": "देशान्तर",
+          "useMyLocation": "मेरो स्थान प्रयोग गर्नुहोस्",
+          "severity": "गम्भीरता",
+          "detailsLabel": "विवरण",
+          "detailsPlaceholder": "पहिरोको वर्णन गर्नुहोस् — आकार, क्षति, अवरुद्ध सडकहरू, चोटपटक, आदि।",
+          "images": "फोटोहरू",
+          "maxImages": "अधिकतम ५ तस्बिरहरू",
+          "reporterName": "तपाईंको नाम",
+          "contactInfo": "सम्पर्क (फोन/इमेल)",
+          "optional": "वैकल्पिक",
+          "namePlaceholder": "तपाईंको नाम लेख्नुहोस्",
+          "contactPlaceholder": "फोन नम्बर वा इमेल",
+          "submit": "रिपोर्ट पेश गर्नुहोस्",
+          "submitting": "पेश गर्दै...",
+          "cancel": "रद्द गर्नुहोस्",
+          "submitSuccess": "पहिरो रिपोर्ट सफलतापूर्वक पेश र स्थानीय रूपमा बचत गरियो।",
+          "pastReports": "विगतका रिपोर्टहरू",
+          "noReports": "अहिलेसम्म कुनै पहिरो रिपोर्ट छैन। पहिलो पेश गर्नुहोस्।",
+          "delete": "रिपोर्ट मेटाउनुहोस्",
+          "invalidCoords": "कृपया मान्य अक्षांश र देशान्तर प्रविष्ट गर्नुहोस्।",
+          "descriptionRequired": "कृपया पहिरोको विवरण दिनुहोस्।",
+          "geolocationUnavailable": "तपाईंको ब्राउजरमा जियोलोकेसन उपलब्ध छैन।",
+          "geolocationDenied": "स्थान पहुँच अस्वीकार गरियो। कृपया निर्देशांक म्यानुअल रूपमा प्रविष्ट गर्नुहोस्।",
+          "disclaimer": "रिपोर्टहरू तपाईंको यन्त्रमा स्थानीय रूपमा भण्डारण गरिएका छन्। तिनीहरू सर्भरमा पठाइँदैनन्। ब्राउजर डेटा खाली गर्दा बचत गरिएका रिपोर्टहरू हटाइनेछन्।"
     }
   },
   mni: {
@@ -844,7 +1009,8 @@ export const translations = {
       riskMap: "রিক্স মেপ",
       roadConnectivity: "লম্বীগী শম্নবা",
       weatherForecast: "নোংজু-নুংশাগী ফিভম",
-      emergencyResponse: "খুদক্কী থৌরাং"
+      emergencyResponse: "খুদক্কী থৌরাং",
+      reportLandslide: "লৈমাসিল রিপোর্ট"
     },
     risk: {
       landslideRisk: "চীং তেংখায়বগী রিক্স",
@@ -1005,6 +1171,38 @@ export const translations = {
       disasterManagement: "দিজাস্টার মেনেজমেন্ট",
       contactLocal: "মফম অদুগী দিজাস্টার মেনেজমেন্টতা কন্টাক্ট তৌউ।",
       disclaimer: "পেজ অসিনা জেনেরেল গাইডেন্স পীরি। ওথোরিতীশিংগী ইন্সট্রক্সন ইন্দুনা চৎলু।"
+    },
+    report: {
+          "sectionLabel": "কম্যুনিটি রিপোর্ট",
+          "title": "লৈমাসিল রিপোর্ট তৌবিউ",
+          "description": "অথোরিটিশিংবু অমসুং অদোমগী কম্যুনিটিদা মতেং পাংবা ওইনা ফোটো অমসুং মফম বিবরণশিংগা লোয়ননা লৈমাসিল রিপোর্ট পীবিউ।",
+          "newReport": "অনৌবা লৈমাসিল রিপোর্ট",
+          "location": "মফম",
+          "latitude": "অক্ষাংশ",
+          "longitude": "দ্রাঘিমাংশ",
+          "useMyLocation": "ঐগী মফম শিজিন্নবিউ",
+          "severity": "তীব্রতা",
+          "detailsLabel": "বিবরণ",
+          "detailsPlaceholder": "লৈমাসিল অদু তাকপিবিউ — চাউবা, মাংখিবা, লম্বী ক্লোজ তৌরবশিং, আঘাতশিং, অসিনচিংবা।",
+          "images": "ফোটোশিং",
+          "maxImages": "মরু ওইনা ৫ ফোটো",
+          "reporterName": "নহাক্কী মমিং",
+          "contactInfo": "কন্টেক্ট (ফোন/ইমেইল)",
+          "optional": "ঐচ্ছিক",
+          "namePlaceholder": "নহাক্কী মমিং থাবিউ",
+          "contactPlaceholder": "ফোন নম্বর নত্রগা ইমেইল",
+          "submit": "রিপোর্ট পীবিউ",
+          "submitting": "পীরি...",
+          "cancel": "লৌথোকউ",
+          "submitSuccess": "লৈমাসিল রিপোর্ট ফজনা পীখ্রে অমসুং মফমদা কান্নবা শেমখ্রে।",
+          "pastReports": "মমাংগী রিপোর্টশিং",
+          "noReports": "হৌজিক ফাওবদা লৈমাসিল রিপোর্ট অমত্তা লৈতে। অহানবা অমা পীবিউ।",
+          "delete": "রিপোর্ট মুৎথৎনবিউ",
+          "invalidCoords": "চানবিদুনা ফজবা অক্ষাংশ অমসুং দ্রাঘিমাংশ থাবিউ।",
+          "descriptionRequired": "চানবিদুনা লৈমাসিলগী বিবরণ পীবিউ।",
+          "geolocationUnavailable": "নহাক্কী ব্রাউজরদা জিওলোকেশন ফংলোই।",
+          "geolocationDenied": "মফম এক্সেস পাম্লোই। চানবিদুনা কোওর্ডিনেট মেন্যুয়েলি থাবিউ।",
+          "disclaimer": "রিপোর্টশিং নহাক্কী ডিভাইসতা মফমদা কান্নরে। মখোয় সর্ভরদা থারোই। ব্রাউজর ডেটা মুৎথৎলবদি কান্নরবা রিপোর্টশিং মুৎথৎকনি।"
     }
   },
   lus: {
@@ -1012,7 +1210,8 @@ export const translations = {
       riskMap: "Risk Map",
       roadConnectivity: "Kawng Zawmna",
       weatherForecast: "Khawchin Hriattirna",
-      emergencyResponse: "Chhiatrup Chhanhimna"
+      emergencyResponse: "Chhiatrup Chhanhimna",
+      reportLandslide: "Landslide Report"
     },
     risk: {
       landslideRisk: "Leimin Hlauhawm",
@@ -1173,6 +1372,38 @@ export const translations = {
       disasterManagement: "Disaster Management",
       contactLocal: "Tualchhung disaster management bia rawh.",
       disclaimer: "Hemi page hian inkaihhruaina tlangpui a pe. Thuneitute thu zawm zel rawh."
+    },
+    report: {
+          "sectionLabel": "Community Report-na",
+          "title": "Landslide Report Pek Rawh",
+          "description": "Thuneitu leh i community tan a rang zawka chhanna pek theih nan photo leh hmun chiang takin landslide report pe rawh.",
+          "newReport": "Landslide Report Thar",
+          "location": "Hmun",
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "useMyLocation": "Ka hmun hmang rawh",
+          "severity": "Severity",
+          "detailsLabel": "Sawi fiahna",
+          "detailsPlaceholder": "Landslide sawi fiah rawh — a lian zawng, a siat zawng, kawng khar, hliamna, etc.",
+          "images": "Photo-te",
+          "maxImages": "tam berin photo 5",
+          "reporterName": "I hming",
+          "contactInfo": "Contact (phone/email)",
+          "optional": "optional",
+          "namePlaceholder": "I hming ziak rawh",
+          "contactPlaceholder": "Phone number emaw email",
+          "submit": "Report Pe Rawh",
+          "submitting": "A submit mek...",
+          "cancel": "Paih rawh",
+          "submitSuccess": "Landslide report hi pe a ni tawh a, i device-ah a save a ni.",
+          "pastReports": "Report hlui-te",
+          "noReports": "Landslide report awm lo. A hmasa ber pe rawh.",
+          "delete": "Report paih rawh",
+          "invalidCoords": "Latitude leh longitude dik tak ziak rawh.",
+          "descriptionRequired": "Landslide sawi fiahna pe rawh le.",
+          "geolocationUnavailable": "I browser-ah geolocation a awm lo.",
+          "geolocationDenied": "Hmun phal a ni lo. Coordinate hi manually ziak rawh.",
+          "disclaimer": "Report-te hi i device-ah chauh a save a ni. Server-ah a thawn lo. Browser data paih chuan save report-te a bo dawn."
     }
   },
   kha: {
@@ -1180,7 +1411,8 @@ export const translations = {
       riskMap: "Ka Map Jingma",
       roadConnectivity: "Ka Jingiasoh Surok",
       weatherForecast: "Ka Jingiathuhlypa Suinbneng",
-      emergencyResponse: "Ka Jingkyrshan Kynsan"
+      emergencyResponse: "Ka Jingkyrshan Kynsan",
+      reportLandslide: "Ka Jingpynkynjah Report"
     },
     risk: {
       landslideRisk: "Ka Jingma Twah Khyndew",
@@ -1341,6 +1573,38 @@ export const translations = {
       disasterManagement: "Disaster Management",
       contactLocal: "Wad iarap na ki bor disaster management jong ka district.",
       disclaimer: "Kane ka page ka ai jingbatai heh. Bud man la ka por ia ki jingbthah na ki bor sorkar."
+    },
+    report: {
+          "sectionLabel": "Ka Jingpynkynjah jong ka Ri",
+          "title": "Pynkynjah ka Report Landslide",
+          "description": "Ai ka report landslide bad ki photo bad ka jingialang ka jaka ban pynkynmaw ia ki nongsynshar bad ka community ban pynkynmaw ha kaba jingkham.",
+          "newReport": "Ka Report Landslide Thymmai",
+          "location": "Ka Jaka",
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "useMyLocation": "Pyndonkam ia ka jaka jong nga",
+          "severity": "Ka Jingthoh",
+          "detailsLabel": "Ka Jingialang",
+          "detailsPlaceholder": "Ialang ia ka landslide — ka jinglang, ka jingshong, ki trong kiba jingkham, ki jingthoh, etc.",
+          "images": "Ki Photo",
+          "maxImages": "kaba bun 5 ki photo",
+          "reporterName": "Ka Kyrteng jong phi",
+          "contactInfo": "Contact (phone/email)",
+          "optional": "optional",
+          "namePlaceholder": "Thoh ia ka kyrteng jong phi",
+          "contactPlaceholder": "Phone number ne email",
+          "submit": "Pynkynjah ka Report",
+          "submitting": "Ka jingpynkynjah...",
+          "cancel": "Pynbna",
+          "submitSuccess": "Ka report landslide ka la pynkynjah haba suk bad ka la save ha ka device jong phi.",
+          "pastReports": "Ki Report Hynñiew",
+          "noReports": "Ym don ki report landslide haduh katni. Pynkynjah kaba nyngkong haba.",
+          "delete": "Pynsiat ka Report",
+          "invalidCoords": "Sngewbha thoh ia ka latitude bad ka longitude.",
+          "descriptionRequired": "Sngewbha ai ia ka jingialang jong ka landslide.",
+          "geolocationUnavailable": "Ha ka browser jong phi ym don ka geolocation.",
+          "geolocationDenied": "Ka jaka ym phal. Sngewbha thoh ia ki coordinate manually.",
+          "disclaimer": "Ki report ki save ha ka device jong phi. Ki ym don jingpyntha sha ka server. Lada phi pynsiat ia ka browser data, ki report kiba la save ki la siat."
     }
   },
   grt: {
@@ -1348,7 +1612,8 @@ export const translations = {
       riskMap: "Kenani Map",
       roadConnectivity: "Rama Nangrimani",
       weatherForecast: "Salgi Obosta",
-      emergencyResponse: "Rangsan Nangchongmotani"
+      emergencyResponse: "Rangsan Nangchongmotani",
+      reportLandslide: "Landslide Report"
     },
     risk: {
       landslideRisk: "A·a Be·ani Kenani",
@@ -1509,6 +1774,38 @@ export const translations = {
       disasterManagement: "Disaster Management",
       contactLocal: "District disaster management authority na rina.",
       disclaimer: "Ia page a·a be·ani kaman ong·a. Official instruction manina."
+    },
+    report: {
+          "sectionLabel": "Nokma·gipa Report",
+          "title": "Landslide Report On·angaha",
+          "description": "Nokma·a aro nangni community·ko changanchimode rang·gimin photo aro jaka bilsi·ko gimin landslide report on·angaha.",
+          "newReport": "Aganna Landslide Report",
+          "location": "Jaka",
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "useMyLocation": "Anggipa jaka pilakaha",
+          "severity": "Donggipa",
+          "detailsLabel": "Bilsi",
+          "detailsPlaceholder": "Landslide·ko bilsi on·angaha — ba·adongipa, chot·chot·a, rasta band, nangchongmot, etc.",
+          "images": "Photo·rang",
+          "maxImages": "ba·buni 5 photo",
+          "reporterName": "Nangni ming",
+          "contactInfo": "Contact (phone/email)",
+          "optional": "optional",
+          "namePlaceholder": "Nangni ming on·angaha",
+          "contactPlaceholder": "Phone number bane email",
+          "submit": "Report On·angaha",
+          "submitting": "On·anga mek...",
+          "cancel": "Band·a",
+          "submitSuccess": "Landslide report sko on·anga jakachake aro nangni device·o save·a.",
+          "pastReports": "Aganna Report·rang",
+          "noReports": "Landslide report jeon dongjagija. Gitcham gipa on·angaha.",
+          "delete": "Report chotaha",
+          "invalidCoords": "Sko latitude aro longitude on·angaha.",
+          "descriptionRequired": "Sko landslide·ni bilsi on·angaha.",
+          "geolocationUnavailable": "Nangni browser·o geolocation dongja.",
+          "geolocationDenied": "Jaka access changjagija. Sko coordinate manually on·angaha.",
+          "disclaimer": "Report·rang nangni device·o save·a. Server·chi nangja. Browser data chotadake save report·rang chot·gija."
     }
   },
   trp: {
@@ -1516,7 +1813,8 @@ export const translations = {
       riskMap: "Risk Map",
       roadConnectivity: "Lama Rwng",
       weatherForecast: "Nokha Bwskang",
-      emergencyResponse: "Khwlaikha Bwskang"
+      emergencyResponse: "Khwlaikha Bwskang",
+      reportLandslide: "Landslide Kwtal"
     },
     risk: {
       landslideRisk: "Haa Kwtwng Risk",
@@ -1677,6 +1975,38 @@ export const translations = {
       disasterManagement: "Disaster Management",
       contactLocal: "District disaster management authority rwdi.",
       disclaimer: "O page haa kwtwng kaman se. Official instruction naikhokna."
+    },
+    report: {
+          "sectionLabel": "Hadduk Kwtal",
+          "title": "Landslide Kwtal Hanao",
+          "description": "Bisi-bwthar ni haddukni bokha rok-khadang khorang nwng photo aro jaga rwchaprwi landslide kwtal hanao.",
+          "newReport": "Nwtong Landslide Kwtal",
+          "location": "Jaga",
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "useMyLocation": "Ang jaga somani",
+          "severity": "Khamani",
+          "detailsLabel": "Rwchaprwi",
+          "detailsPlaceholder": "Landslide rwchaprwi — bwrwi, khasai, lamphai band, phaidi, etc.",
+          "images": "Photo-ni",
+          "maxImages": "5 photo jwk",
+          "reporterName": "Nwng mung",
+          "contactInfo": "Contact (phone/email)",
+          "optional": "somani nwng",
+          "namePlaceholder": "Nwng mung swr",
+          "contactPlaceholder": "Phone number nwng email",
+          "submit": "Kwtal Hanao",
+          "submitting": "Hanao mwk...",
+          "cancel": "Band kwr",
+          "submitSuccess": "Landslide kwtal bwjwk hanao aro nwng device-o save kwr.",
+          "pastReports": "Phainwi Kwtal-ni",
+          "noReports": "Landslide kwtal dong nai. Hathwi gwthar hanao.",
+          "delete": "Kwtal phaidi",
+          "invalidCoords": "Latitude aro longitude bwjwk swr.",
+          "descriptionRequired": "Landslide rwchaprwi hanao.",
+          "geolocationUnavailable": "Nwng browser-o geolocation dong nai.",
+          "geolocationDenied": "Jaga access phal nai. Coordinate manually swr.",
+          "disclaimer": "Kwtal-ni nwng device-o save kwr. Server-o thawr nai. Browser data phaidi hadak save kwtal-ni phaidi kwr."
     }
   }
 }

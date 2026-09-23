@@ -12,6 +12,7 @@ import MapPage from "./pages/MapPage";
 import RoadConnectivity from "./pages/RoadConnectivity";
 import WeatherForecast from "./pages/WeatherForecast";
 import EmergencyResponse from "./pages/EmergencyResponse";
+import ReportLandslide from "./pages/ReportLandslide";
 
 function App() {
   return (
@@ -55,6 +56,13 @@ function App() {
                 path="/emergency"
                 element={
                   <EmergencyResponse />
+                }
+              />
+
+              <Route
+                path="/report"
+                element={
+                  <ReportLandslide />
                 }
               />
 
